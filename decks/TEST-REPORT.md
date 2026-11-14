@@ -1,5 +1,11 @@
 # Portable workflow validation
 
+## 2026-11-14 · 使用用户 PNG/JPG 截图复核融合
+
+- 第 12 页使用用户 PNG 原件启用 blend；第 14 页上排 PNG、下排 JPG，左右分别原样/融合。同一行使用同一文件，不改写截图。
+- 原 SVG 已由用户移除，引用和资源清单同步更新。保留此前内容检查点与本轮 pre-raster-blend-comparison 检查点。
+- 完整 15 页 --visual：P0=0/P1=0/P2=0；人工复核 PNG/JPG 对照截图，文件正常加载、无溢出或裁切。
+
 ## 2026-11-14 · 白底融合可恢复试用
 
 - 新增可选 `white_background: original | blend`，缺省 original。仅 blend 图片使用 multiply 显示，并取消其 figure 白底；不改动源图，不生成真实透明像素。

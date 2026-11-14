@@ -175,7 +175,7 @@ slides:
     content:
       image_mode: side-dominant
       image:
-        src: assets/diagrams/white-background.svg
+        src: assets/diagrams/white-background.png
         caption: 白底融合试用；原图保持不变。
         white_background: blend
       bullets: [横图优先分配宽度, 文字保留舒适栏宽]
@@ -197,18 +197,20 @@ slides:
 
   - slide_id: s14-html
     layout: html
-    title: 白底融合：同一张图片前后对照
+    title: PNG 与 JPG：原图和白底融合对照
     content:
       html: |
-        <div class="cols" style="background:#eee9df;padding:24px;border-radius:12px;">
-          <div class="col"><h3>原图：保留白色背景</h3><div class="figure"><img src="assets/diagrams/white-background.svg" alt="原图白色背景"></div></div>
-          <div class="col"><h3>blend：白底融入页面</h3><div class="figure figure-white-blend"><img src="assets/diagrams/white-background.svg" alt="同一原图融合背景"></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 22px;background:#eee9df;padding:14px;border-radius:12px;">
+          <div><h3>PNG · 原图</h3><div class="figure"><img style="height:175px;width:100%;object-fit:contain;" src="assets/diagrams/white-background.png" alt="PNG 原图白色背景"></div></div>
+          <div><h3>PNG · blend</h3><div class="figure figure-white-blend"><img style="height:175px;width:100%;object-fit:contain;" src="assets/diagrams/white-background.png" alt="同一 PNG 融合背景"></div></div>
+          <div><h3>JPG · 原图</h3><div class="figure"><img style="height:175px;width:100%;object-fit:contain;" src="assets/diagrams/white-background.jpg" alt="JPG 原图白色背景"></div></div>
+          <div><h3>JPG · blend</h3><div class="figure figure-white-blend"><img style="height:175px;width:100%;object-fit:contain;" src="assets/diagrams/white-background.jpg" alt="同一 JPG 融合背景"></div></div>
         </div>
-        <p>对照区使用较深底色，便于观察；上一图文页展示 YAML 开关。</p>
-        <p class="fragment">白色节点内部也会融合；颜色会受底色影响，不用于定量色图。</p>
+        <p style="font-size:20px;">使用你提供的截图原件；左右同文件，灰米色底用于放大差异。</p>
+        <span class="fragment" style="font-size:18px;">原图不变；内部白色与彩色区域也会受底色影响。</span>
     cite: *cite
     sources: *sources
-    notes: 本页保留 HTML 备用入口与 fragment 演示，同时对比同一文件的原样和混合显示。对照区底色刻意比页面深以放大差异；白色并未被删除，也不是真透明。常规使用仅需在 image 中设置 white_background 为 blend，如 s12-dominant。热力图、色标与灰度数据图应保留 original。
+    notes: 使用用户提供的 white-background.png 和 white-background.jpg 原件，上排 PNG、下排 JPG，左侧原样、右侧 multiply 融合。只比较同一行左右效果，不把两份截图的尺寸、内容差别归因于格式。JPG 可能存在近白色压缩痕迹，融合不是按纯白阈值删除像素。保留 HTML 备用入口与 fragment 演示。常规使用仅需在 image 中设置 white_background 为 blend，如 s12-dominant。热力图、色标与灰度数据图应保留 original。
 
   - slide_id: s15-conclusion
     layout: conclusion
