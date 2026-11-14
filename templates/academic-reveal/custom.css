@@ -208,6 +208,9 @@ pre.mermaid{ font-family:inherit; white-space:pre; margin:8px 0; }
 .cd-text{ display:block; width:100%; align-self:stretch; overflow:hidden; }
 
 /* ---- 其他 ---- */
+/* 可选白底融合，仅作用于图片本身；原文件不变，不等同于真实透明。 */
+.reveal .slides section .figure.figure-white-blend{ background:transparent; }
+.figure-white-blend > img{ mix-blend-mode:multiply; }
 /* 普通内容页预留统一眉题区；无眉题时仍保留，标题顶部不随内容变化。 */
 .reveal .slides section:is(.layout-bullets,.layout-image,.layout-image-text,.layout-compare,.layout-table,.layout-roadmap,.layout-conclusion){ padding-top:72px; }
 .reveal .slides section:is(.layout-bullets,.layout-image,.layout-image-text,.layout-compare,.layout-table,.layout-roadmap,.layout-conclusion) > .kicker{

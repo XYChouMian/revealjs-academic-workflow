@@ -1,5 +1,12 @@
 # Portable workflow validation
 
+## 2026-11-14 · 白底融合可恢复试用
+
+- 新增可选 `white_background: original | blend`，缺省 original。仅 blend 图片使用 multiply 显示，并取消其 figure 白底；不改动源图，不生成真实透明像素。
+- 第 12 页通过 YAML 选项启用，第 14 页同图原样/融合对照；页面总数仍为 15。
+- 修改前保存 starter checkpoint `pre-white-background-blend` 与模板/构建器备份。独立 Git 提交用于整体恢复，未推送，待用户审看。
+- 全 deck 重建与 --visual：P0=0/P1=0/P2=0；导航交互回归通过；对照截图人工确认白底融合与内部白色同步变化，未裁切。
+
 ## 2026-11-14 · v1.5.1 唯一功能示例
 
 - 仅保留 `decks/starter/`，15 张短页覆盖全部 10 种 layout、三种图片模式、三种表格模式、富层级卡片、fit_text 字号与行高、公式、Mermaid、SVG、fragment、导航、Notes、来源与页码。默认/兼容写法在对应 Notes 说明，避免重复页面。

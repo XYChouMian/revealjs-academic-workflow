@@ -174,7 +174,10 @@ slides:
     title: 图片主导：横图获得更宽空间
     content:
       image_mode: side-dominant
-      image: {src: assets/diagrams/workflow.svg, caption: 自绘流程图；图片宽栏。}
+      image:
+        src: assets/diagrams/white-background.svg
+        caption: 白底融合试用；原图保持不变。
+        white_background: blend
       bullets: [横图优先分配宽度, 文字保留舒适栏宽]
       callout: {text: 图片保持原始比例。}
     cite: *cite
@@ -194,12 +197,18 @@ slides:
 
   - slide_id: s14-html
     layout: html
-    title: 自定义 HTML：特殊页面的备用入口
+    title: 白底融合：同一张图片前后对照
     content:
-      html: '<div class="note-box"><p>保留原生 HTML 能力；内容仍写在 slides.yaml。</p><p class="fragment">按下一步，显示这条渐进要点。</p></div>'
+      html: |
+        <div class="cols" style="background:#eee9df;padding:24px;border-radius:12px;">
+          <div class="col"><h3>原图：保留白色背景</h3><div class="figure"><img src="assets/diagrams/white-background.svg" alt="原图白色背景"></div></div>
+          <div class="col"><h3>blend：白底融入页面</h3><div class="figure figure-white-blend"><img src="assets/diagrams/white-background.svg" alt="同一原图融合背景"></div></div>
+        </div>
+        <p>对照区使用较深底色，便于观察；上一图文页展示 YAML 开关。</p>
+        <p class="fragment">白色节点内部也会融合；颜色会受底色影响，不用于定量色图。</p>
     cite: *cite
     sources: *sources
-    notes: html 为特殊兼容入口，不建议作为常规排版方式。本页顺带展示 Reveal 的 fragment 渐进显示；方向键先揭示要点，再翻页。复杂图形仍须保存为独立资源。
+    notes: 本页保留 HTML 备用入口与 fragment 演示，同时对比同一文件的原样和混合显示。对照区底色刻意比页面深以放大差异；白色并未被删除，也不是真透明。常规使用仅需在 image 中设置 white_background 为 blend，如 s12-dominant。热力图、色标与灰度数据图应保留 original。
 
   - slide_id: s15-conclusion
     layout: conclusion

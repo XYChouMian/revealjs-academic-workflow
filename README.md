@@ -80,5 +80,13 @@ deck:
 
 ## Git 使用
 
+白底融合试用：在图文页的 `content.image` 下添加 `white_background: blend`；独立图片页放在
+`content` 下。省略或设为 `original` 保留原样。原图不变，图片容器白底自动取消。
+这是混合显示而非真实透明，白色内部区域也会融合，彩色区域会受底色影响；定量色图应保留原样。
+唯一示例的第 12 页演示配置，第 14 页展示同图前后对照。
+
+本次试用前的内容 checkpoint 为 `pre-white-background-blend`；模板和构建器备份位于
+忽略目录 `backups/pre-white-background-blend-20261114/`。也可通过本次独立 Git 提交整体撤销。
+
 本目录已经初始化为独立 Git 仓库；父项目根目录没有初始化。首次提交前可先用 `git status` 检查纳入范围，再关联远程仓库。
 

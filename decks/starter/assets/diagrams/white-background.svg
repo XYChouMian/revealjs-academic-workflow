@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400" role="img" aria-labelledby="title">
+  <title id="title">白底融合测试图：两个节点与一条连线，无实验数据</title>
+  <rect width="800" height="400" fill="white"/>
+  <path d="M260 200H540" stroke="#1560bd" stroke-width="8"/>
+  <g fill="white" stroke="#1560bd" stroke-width="4"><circle cx="220" cy="200" r="75"/><circle cx="580" cy="200" r="75"/></g>
+  <g fill="#1c1c1c" text-anchor="middle" font-family="serif" font-size="36"><text x="220" y="212">输入</text><text x="580" y="212">输出</text></g>
+  <text x="400" y="350" text-anchor="middle" font-family="serif" font-size="26" fill="#666">自绘示意 · 无实验数据</text>
+</svg>

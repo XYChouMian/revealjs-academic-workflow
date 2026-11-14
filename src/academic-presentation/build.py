@@ -48,7 +48,7 @@ LAYOUT_FIELDS = {
     "html": {"html"},
     "section": {"no", "points", "point_mode"},
     "bullets": {"lead", "bullets", "callout", "box", "mermaid"},
-    "image": {"src", "caption", "alt", "image", "bullets", "mermaid"},
+    "image": {"src", "caption", "alt", "white_background", "image", "bullets", "mermaid"},
     "image-text": {"image", "side", "image_mode", "bullets", "callout", "mermaid"},
     "compare": {"cols", "card_mode", "callout", "fit_text", "mermaid"},
     "table": {"headers", "rows", "highlight_row", "table_mode", "dense", "note", "mermaid"},
@@ -195,10 +195,14 @@ def _attr(text):
 
 def _figure(img):
     src = _attr(img.get("src", ""))
+    background = img.get("white_background", "original")
+    if background not in {"original", "blend"}:
+        raise ValueError("image.white_background 必须是 original 或 blend")
+    blend_class = " figure-white-blend" if background == "blend" else ""
     if img.get("max_height"):
         print(f"[build] 提示: image.max_height 已废弃（v1.4 起图片自动适配剩余高度），已忽略 max_height={img['max_height']}")
     cap = f'<div class="figcap">{e(img.get("caption",""))}</div>' if img.get("caption") else ""
-    return f'  <div class="figure">\n    <img src="{src}" alt="{_attr(img.get("alt", img.get("caption","")))}">\n{cap}  </div>\n'
+    return f'  <div class="figure{blend_class}">\n    <img src="{src}" alt="{_attr(img.get("alt", img.get("caption","")))}">\n{cap}  </div>\n'
 
 
 def r_image(slide):
