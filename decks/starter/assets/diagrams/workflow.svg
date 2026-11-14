@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-labelledby="title desc">
+  <title id="title">Academic presentation workflow</title>
+  <desc id="desc">Five connected stages from evidence to delivery.</desc>
+  <rect width="960" height="520" rx="28" fill="#f8f5ef"/>
+  <g font-family="Arial, sans-serif" text-anchor="middle">
+    <g fill="#17324d">
+      <rect x="55" y="190" width="150" height="110" rx="18"/>
+      <rect x="230" y="190" width="150" height="110" rx="18"/>
+      <rect x="405" y="190" width="150" height="110" rx="18"/>
+      <rect x="580" y="190" width="150" height="110" rx="18"/>
+      <rect x="755" y="190" width="150" height="110" rx="18"/>
+    </g>
+    <g fill="#ffffff" font-size="24" font-weight="700">
+      <text x="130" y="235">Evidence</text><text x="130" y="270">证据</text>
+      <text x="305" y="235">Argument</text><text x="305" y="270">论证</text>
+      <text x="480" y="235">Assets</text><text x="480" y="270">资源</text>
+      <text x="655" y="235">Build</text><text x="655" y="270">生成</text>
+      <text x="830" y="235">Validate</text><text x="830" y="270">验收</text>
+    </g>
+    <g stroke="#c66b3d" stroke-width="8" fill="none" stroke-linecap="round">
+      <path d="M205 245 H225"/><path d="M380 245 H400"/><path d="M555 245 H575"/><path d="M730 245 H750"/>
+    </g>
+    <text x="480" y="105" fill="#17324d" font-size="34" font-weight="700">slides.yaml is the single source of truth</text>
+    <text x="480" y="390" fill="#59636d" font-size="24">P0/P1 cleared → deliver and stop</text>
+  </g>
+</svg>

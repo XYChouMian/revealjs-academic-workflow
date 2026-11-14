@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>{{DECK_TITLE}}</title>
+<link rel="icon" href="data:,">
+<!-- ============================================================
+     academic-presentation 已验证骨架（勿无故改动）
+     依赖：vendor/ 本地固定版本（由 build.py 复制进 output/）
+       reveal.js 4.6.1 · MathJax 3.2.2 (tex-mml-svg) · mermaid 10.9.1
+     完全离线可用；如需 CDN 版请同步更新底部三个 <script src>。
+     ============================================================ -->
+<link rel="stylesheet" href="vendor/reveal/reveal.css">
+<link rel="stylesheet" href="vendor/reveal/theme/white.css">
+<link rel="stylesheet" href="custom.css">{{DECK_CSS_TAG}}
+<script>
+/* MathJax 3 配置：必须在 tex-mml-svg.js 加载前就位。
+   单 $ 行内公式已启用；pre/code 与 .tex2jax_ignore 不参与排版
+   （Mermaid 源码固定放在 <pre class="mermaid"> 中，避免 $ 被公式引擎吃掉）。
+   实践版结论：Reveal 官方 math 插件默认走 MathJax2 路径（调用 MathJax 3 中
+   不存在的 MathJax.Hub），故本骨架直接用 MathJax 3 自启动整页排版，不加载该插件。 */
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]'], ['$$', '$$']]
+  },
+  svg: { fontCache: 'global' },
+  options: {
+    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+    ignoreHtmlClass: 'tex2jax_ignore'
+  }
+};
+</script>
+<style>
+/* 页面加载前的最小防闪烁；完整样式在 custom.css */
+.reveal-viewport{ background:#fcfbf6; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+{{SLIDES}}
+</div></div>
+
+<script src="vendor/reveal/reveal.js"></script>
+<script src="vendor/reveal/plugin/notes/notes.js"></script>
+<script src="vendor/mermaid/mermaid.min.js"></script>
+<script src="vendor/mathjax/tex-mml-svg.js" defer></script>
+<script>
+(function(){
+  /* ---- Mermaid：手动渲染，避免隐藏页零尺寸（实践版验证方案） ---- */
+  if (window.mermaid) {
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: 'loose',
+      theme: 'base',
+      themeVariables: {
+        fontFamily: '"Times New Roman","STSong","SimSun","Songti SC","Noto Serif CJK SC",serif',
+        fontSize: '19px',
+        primaryColor: '#eef2f7',
+        primaryTextColor: '#1c1c1c',
+        primaryBorderColor: '#7a8aa0',
+        lineColor: '#4a4a4a',
+        tertiaryColor: '#faf9f4',
+        clusterBkg: '#faf9f4',
+        clusterBorder: '#c9c4b6'
+      },
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', nodeSpacing: 34, rankSpacing: 40, padding: 10 }
+    });
+  }
+  var mmCount = 0;
+  function renderMermaidIn(slide){
+    if (!slide || !window.mermaid) return Promise.resolve();
+    var nodes = slide.querySelectorAll('.mermaid:not([data-rendered])');
+    if (!nodes.length) return Promise.resolve();
+    var chain = Promise.resolve();
+    nodes.forEach(function(el){
+      chain = chain.then(function(){
+        var src = el.textContent;
+        return mermaid.render('mmd-' + (mmCount++) + '-' + Date.now(), src).then(function(res){
+          el.innerHTML = res.svg;
+          el.setAttribute('data-rendered','1');
+          var svg = el.querySelector('svg');
+          if (svg) { svg.removeAttribute('height'); svg.style.maxWidth = '100%'; }
+        }).catch(function(e){
+          console.error('Mermaid render failed:', e);
+          el.setAttribute('data-rendered','1');
+          el.innerHTML = '<pre style="color:#8a1c1c;font-size:14px;white-space:pre-wrap;">Mermaid 渲染失败：' + (e && e.message ? e.message : e) + '</pre>';
+        });
+      });
+    });
+    return chain;
+  }
+
+  /* ---- Reveal 初始化：固定 1280×720，内容边界由此确定 ---- */
+  var deck = new Reveal({
+    hash: true,
+    history: true,
+    /* 页码格式必须精确匹配 vendor 支持的字面量：'c'（当前页）或 'c/t'（当前/总数）。
+       'c / t' 带空格不匹配任何 case，静默走 default 分支退化为裸页号（v1.4.2 教训）。 */
+    slideNumber: 'c/t',
+    /* 页码与页脚同行后，隐藏常驻的回退箭头避免与页码挤同一角落
+       （键盘/触摸向后翻页不受影响） */
+    controlsBackArrows: 'hidden',
+    transition: 'fade',
+    backgroundTransition: 'none',
+    width: 1280,
+    height: 720,
+    margin: 0.03,
+    minScale: 0.2,
+    maxScale: 2.0,
+    center: false,
+    controls: true,
+    progress: true,
+    overview: true,
+    plugins: [ RevealNotes ]
+  });
+  function ready(){
+    var kick = function(){ deck.layout(); fitDeclaredText(); renderMermaidIn(deck.getCurrentSlide()); };
+    if (window.MathJax && MathJax.startup && MathJax.startup.promise) {
+      MathJax.startup.promise.then(kick);
+    } else { kick(); }
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function(){ fitDeclaredText(); renderMermaidIn(deck.getCurrentSlide()); });
+    }
+  }
+  deck.initialize().then(ready).catch(function(err){
+    console.error('Reveal initialize failed:', err);
+  });
+  window.__deck = deck;  // 供自动化验收脚本使用（实例 API，不用全局构造函数）
+  /* 仅处理 slides.yaml 显式声明 data-fit-text 的区域。二分搜索在字号和行高的
+     上下限内寻找可容纳的最大组合；不会把文字缩到下限以下，也不会影响正文或引用。 */
+  function fitDeclaredText(){
+    document.querySelectorAll('[data-fit-text]').forEach(function(el){
+      var min = Number(el.getAttribute('data-fit-min')) || 20;
+      var max = Number(el.getAttribute('data-fit-max')) || 24;
+      var lineMin = Number(el.getAttribute('data-fit-line-min')) || 1.42;
+      var lineMax = Number(el.getAttribute('data-fit-line-max')) || 1.58;
+      var lo = min, hi = max, best = min;
+      function set(size){
+        var ratio = max === min ? 0 : (size - min) / (max - min);
+        el.style.fontSize = size.toFixed(2) + 'px';
+        el.style.lineHeight = (lineMin + (lineMax - lineMin) * ratio).toFixed(3);
+      }
+      set(min);
+      if (el.scrollHeight > el.clientHeight + 1) return;
+      for (var i = 0; i < 8; i++) {
+        var mid = (lo + hi) / 2;
+        set(mid);
+        if (el.scrollHeight <= el.clientHeight + 1) { best = mid; lo = mid; }
+        else { hi = mid; }
+      }
+      set(best);
+    });
+  }
+  deck.on('slidechanged', function(e){ fitDeclaredText(); renderMermaidIn(e.currentSlide); });
+  deck.on('resize', fitDeclaredText);
+  deck.on('overviewshown', function(){ renderMermaidIn(deck.getCurrentSlide()); });
+})();
+</script>
+</body>
+</html>

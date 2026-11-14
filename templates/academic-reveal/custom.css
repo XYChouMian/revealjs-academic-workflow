@@ -1,0 +1,211 @@
+/* ============================================================
+   academic-presentation · 公共样式（已验证骨架，勿在单页内重复定义）
+   基于 1364 页实践版提取修复：1280×720、中文衬线、卡片/分栏/引用脚注。
+   页面级特殊样式请写在该页 html 块的局部 <style> 或 deck 级
+   content/deck.css 中，不要修改本文件，除非全体页面需要且已做回归。
+   ============================================================ */
+:root{
+  --ink:#1c1c1c; --sub:#4a4a4a; --faint:#7a7a72;
+  --bg:#fcfbf6; --card:#ffffff; --line:#d9d5ca;
+  --accent:#1560bd;   /* 主强调：定义、结论、正向 */
+  --accent2:#d95f02;  /* 次强调：对比项、逆向 */
+  --good:#0a7d43;     /* 拟议/可行 */
+  --warn:#8a1c1c;     /* 风险/缺失/不可观测 */
+  --purple:#7b4fa6;   /* 机制/注意力类 */
+  --teal:#0f766e;     /* 物理/守恒类 */
+}
+.reveal-viewport{ background:var(--bg); }
+.reveal{
+  font-family:"Times New Roman","STSong","SimSun","Songti SC","Noto Serif CJK SC",serif;
+  font-size:26px; color:var(--ink);
+}
+.reveal .slides section{
+  width:1280px; height:720px; padding:34px 52px 58px 52px;
+  box-sizing:border-box; text-align:left; overflow:visible;
+}
+.reveal .slides section, .reveal .slides section *{ box-sizing:border-box; }
+
+/* ---- 标题层级 ---- */
+.reveal h2{ font-size:35px; line-height:1.28; margin:2px 0 14px 0; color:var(--ink); font-weight:700; }
+.reveal h2 .hl{ color:var(--accent); }
+.reveal h3{ font-size:22px; margin:0 0 8px 0; }
+.reveal p, .reveal li{ font-size:23px; line-height:1.5; }
+.reveal ul, .reveal ol{ margin:6px 0 6px 4px; }
+.reveal li{ margin:5px 0; }
+
+/* ---- 常用组件 ---- */
+.kicker{ font-size:20px; letter-spacing:.10em; color:var(--faint); margin-bottom:8px; }
+.kicker b{ color:var(--accent); font-weight:700; }
+.cite{
+  position:absolute; left:52px; right:52px; bottom:16px;
+  font-size:18px; color:var(--faint);
+  border-top:1px solid var(--line); padding-top:7px;
+}
+.badge{ display:inline-block; font-size:18px; border:1px solid var(--faint); border-radius:9px;
+  padding:1px 9px; margin-left:8px; color:var(--sub); vertical-align:2px; white-space:nowrap; }
+.cols{ display:flex; gap:26px; align-items:stretch; }
+.col{ flex:1; min-width:0; }
+.card{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 18px; }
+.card p, .card li{ font-size:20px; line-height:1.5; }
+.small li, .small p{ font-size:20px; line-height:1.5; }
+.tiny li{ font-size:18px; line-height:1.42; }
+.q{ background:var(--card); border-left:4px solid var(--accent); padding:10px 16px; margin:8px 0; }
+.q.main{ border-left-color:var(--warn); }
+.q .lab{ font-size:18px; color:var(--faint); letter-spacing:.08em; }
+.note-box{ border:1.5px dashed var(--good); border-radius:10px; padding:8px 14px; background:#f4faf5; }
+.tbd-box{ border:1.5px dashed var(--faint); border-radius:10px; padding:8px 14px; background:#faf9f4; }
+
+/* ---- 表格 ---- */
+table.cmp{ border-collapse:collapse; width:100%; font-size:19px; line-height:1.42; }
+table.cmp th{ border-bottom:2px solid #8a8578; text-align:left; padding:8px 9px; font-size:19px; line-height:1.35; }
+table.cmp td{ border-bottom:1px solid var(--line); padding:7px 9px; vertical-align:top; }
+table.cmp tr.me td{ background:#eef6ef; }
+.dense table.cmp, .table-mode-compact table.cmp{ font-size:18px; line-height:1.34; }
+.dense table.cmp th, .table-mode-compact table.cmp th{ padding:5px 7px; font-size:18px; }
+.dense table.cmp td, .table-mode-compact table.cmp td{ padding:4px 7px; }
+.dense li{ line-height:1.4; margin:2px 0; }
+.table-mode-spacious table.cmp{ font-size:20px; line-height:1.52; }
+.table-mode-spacious table.cmp th{ padding:12px 11px; font-size:20px; line-height:1.4; }
+.table-mode-spacious table.cmp tbody tr{ height:58px; }
+.table-mode-spacious table.cmp td{ padding:11px 11px; vertical-align:middle; }
+.table-mode-spacious table.cmp td:first-child{ font-size:22px; color:var(--ink); }
+
+/* ---- 图片与 SVG：容器约束尺寸，禁止溢出 ---- */
+.reveal img{ max-width:100%; }
+.figure img{ display:block; margin:0 auto; max-height:480px; max-width:100%; object-fit:contain; }
+.figure svg{ display:block; max-width:100%; }
+.figcap{ font-size:18px; line-height:1.35; color:var(--sub); margin-top:5px; text-align:center; }
+.legend{ display:flex; flex-wrap:wrap; gap:5px 22px; font-size:18px; line-height:1.35; color:var(--sub); align-items:center; margin:2px 0 6px 0; }
+.legend .it{ display:inline-flex; align-items:center; gap:6px; }
+svg text{ font-family:"Times New Roman","STSong","SimSun","Songti SC","Noto Serif CJK SC",serif; fill:var(--ink); }
+.dense svg{ max-height:248px; }
+
+/* ---- 图片比例驱动的图文页：由 slides.yaml 显式声明，不自动猜测叙事 ---- */
+.image-mode-side-dominant{ display:grid; grid-template-columns:1.42fr .86fr; gap:34px; min-height:492px; }
+.image-mode-side-dominant.text-image{ grid-template-columns:.86fr 1.42fr; }
+.image-mode-side-dominant .col{ display:flex; flex-direction:column; justify-content:center; }
+.image-mode-side-dominant .figure,
+.image-mode-wide-hero .figure{ padding:12px; border:1px solid var(--line); border-radius:12px; background:#fff; }
+.image-mode-side-dominant .figure img{ width:100%; max-height:442px; }
+.image-mode-side-dominant .image-copy{ background:#fff; border-left:4px solid var(--accent); padding:18px 20px; border-radius:0 12px 12px 0; }
+.image-mode-side-dominant.text-image .image-copy{ border-left:0; border-right:4px solid var(--accent); border-radius:12px 0 0 12px; }
+.image-mode-wide-hero{ display:grid; grid-template-columns:1fr; grid-template-rows:auto auto; gap:12px; }
+.image-mode-wide-hero .image-visual{ order:-1; }
+.image-mode-wide-hero .figure{ padding:9px 14px 7px; }
+.image-mode-wide-hero .figure img{ width:100%; max-width:100%; object-fit:contain; }
+.image-mode-wide-hero .image-copy{ min-height:120px; background:#fff; border-left:4px solid var(--accent); padding:13px 20px; border-radius:0 12px 12px 0; }
+.image-mode-wide-hero .image-copy ul{ columns:3; column-gap:28px; margin:0; }
+.image-mode-wide-hero .image-copy li{ break-inside:avoid; font-size:18px; line-height:1.35; margin:0 0 7px; }
+
+/* ---- 分层卡片与章节导读：核心判断 > 解释 > 讨论提示 ---- */
+.card-mode-hierarchy{ min-height:420px; align-items:stretch; }
+.card-mode-hierarchy .card{ min-height:420px; padding:20px 18px; display:flex; flex-direction:column; }
+.card-mode-hierarchy h3{ font-size:24px; margin-bottom:8px; }
+.card-index{ font-size:17px; font-weight:700; color:var(--accent); letter-spacing:.12em; }
+.card-thesis{ margin:12px 0 14px; font-size:27px; font-weight:700; line-height:1.27; color:var(--ink); }
+.hierarchy-card{ height:100%; display:flex; flex-direction:column; }
+.card-detail{ flex:1; display:flex; align-items:center; margin:0; font-size:20px; line-height:1.48; color:var(--sub); }
+.card-cue{ margin-top:auto; padding-top:13px; border-top:1px solid var(--line); font-size:18px; line-height:1.42; color:var(--faint); }
+.section-slide .hierarchy-list{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin:34px 0 0; }
+.section-slide .hierarchy-list li{ display:flex; flex-direction:column; justify-content:space-between; min-height:286px; padding:22px 18px; background:var(--card); border:1px solid var(--line); border-radius:12px; }
+.section-slide .hierarchy-list b{ font-size:30px; color:var(--accent); }
+.section-slide .hierarchy-list span{ font-size:21px; line-height:1.45; color:var(--sub); }
+.section-slide .hierarchy-list em{ font-size:18px; line-height:1.42; color:var(--faint); font-style:normal; border-top:1px solid var(--line); padding-top:9px; }
+
+/* ---- 结论页：三类结论并列呈现，避免短文本漂浮 ---- */
+.conclusion-grid{ display:flex; gap:12px; align-items:stretch; }
+.conclusion-grid .conclusion-card{ flex:1; min-height:372px; margin:14px .45% !important; padding:18px 16px; }
+.conclusion-grid .conclusion-card b{ display:block; font-size:22px; margin-bottom:10px; }
+.conclusion-grid .conclusion-card li{ font-size:18px; line-height:1.45; }
+
+/* ---- Mermaid：手动渲染 + 已验证的裁剪修复 ---- */
+/* 修复：mermaid 沙箱按 line-height:1em 测量标签高度，渲染态继承 .reveal 的更大行高
+   会被 foreignObject 裁剪，此处压回一致（来自实践版踩坑记录） */
+.mermaid{ display:flex; justify-content:center; background:var(--card);
+  border:1px solid var(--line); border-radius:10px; padding:6px; margin:8px 0; }
+pre.mermaid{ font-family:inherit; white-space:pre; margin:8px 0; }
+.mermaid svg{ max-width:100%; height:auto; }
+.mermaid foreignObject div, .mermaid foreignObject span{ line-height:1 !important; }
+
+/* ---- 布局：封面 / 章节过渡 ----
+   注意：必须用 .reveal .slides section 前缀提高优先级，
+   否则 display:flex 会被 reveal.css 的 section 规则覆盖（视觉回归已验证）。 */
+.reveal .slides section.cover{ display:flex !important; flex-direction:column; justify-content:center; }
+.cover h1{ font-size:47px; line-height:1.3; margin:0 0 14px 0; }
+.cover .sub{ font-size:28px; color:var(--sub); margin-bottom:30px; }
+.cover .concern{ font-size:25px; line-height:1.55; border-left:5px solid var(--warn);
+  padding:8px 20px; background:var(--card); max-width:1000px; }
+.cover .meta{ margin-top:44px; font-size:20px; color:var(--sub); }
+.reveal .slides section.section-slide{ display:flex !important; flex-direction:column; justify-content:center; }
+.section-slide .no{ font-size:88px; font-weight:700; color:var(--accent); opacity:.28; line-height:1; }
+.section-slide h2{ font-size:44px; margin:10px 0 16px 0; }
+.section-slide ul{ list-style:none; margin-left:0; }
+
+/* ---- 内容区纵向撑满（v1.3，2026-10-25）----
+   根因修复"内容堆上半部、下半部大块留白"：表格/要点/卡片栏/结论页的骨架改为
+   flex 纵向列，内容区 flex:1 撑满剩余高度——表格行随版面分布、卡片填满所在列，
+   而不是逐 deck 调行距。布局类由 build.py 输出（layout-table 等）。
+   display 必须 !important：Reveal 对可见 slide 内联写 display:block（同 cover 修复）。
+   图文页与 html 逃生舱不参与（图片高度由内容决定）；封面/章节页已有 !important 规则。 */
+.reveal .slides section.layout-table,
+.reveal .slides section.layout-bullets,
+.reveal .slides section.layout-compare,
+.reveal .slides section.layout-roadmap,
+.reveal .slides section.layout-conclusion{ display:flex !important; flex-direction:column; }
+.reveal .slides section.layout-table > table.cmp{ flex:1; }
+.reveal .slides section.layout-table > div[class^="table-mode-"]{ flex:1; min-height:0; }
+.reveal .slides section.layout-table > div[class^="table-mode-"] > table.cmp{ height:100%; }
+.reveal .slides section.layout-compare > .cols,
+.reveal .slides section.layout-roadmap > .cols{ flex:1; min-height:0; }
+.reveal .slides section .cols > .col{ display:flex; flex-direction:column; align-self:stretch; }
+.reveal .slides section .cols > .col > .card{ flex:1; }
+.reveal .slides section.layout-conclusion > .conclusion-grid{ flex:1; min-height:0; }
+.reveal .slides section.layout-bullets li{ margin:8px 0; }
+.reveal .slides section.layout-bullets .q{ padding:13px 16px; margin-top:13px; }
+
+/* ---- 图文页图片自适应（v1.4，2026-10-25）----
+   消灭 max_height 手工试参：图文页纳入撑满骨架，图片经 flex:1 + object-fit:contain
+   自动占据剩余高度（图注保持自然高度），不溢出也不留白；agent 只写 src/caption/side。
+   注意：image-mode-side-dominant 原有的 img max-height:442px 等固定规则被以下
+   更高优先级选择器覆盖；wide-hero 的行高改为"图片行吃剩余高度"。 */
+.reveal .slides section.layout-image,
+.reveal .slides section.layout-image-text{ display:flex !important; flex-direction:column; }
+.reveal .slides section.layout-image > .figure,
+.reveal .slides section.layout-image-text > .cols{ flex:1; min-height:0; }
+.reveal .slides section.layout-image .figure,
+.reveal .slides section .image-mode-side .figure,
+.reveal .slides section .image-mode-side-dominant .figure,
+.reveal .slides section .image-mode-wide-hero .figure{
+  flex:1; min-height:0; display:flex; flex-direction:column; }
+.reveal .slides section.layout-image .figure img,
+.reveal .slides section .image-mode-side .figure img,
+.reveal .slides section .image-mode-side-dominant .figure img,
+.reveal .slides section .image-mode-wide-hero .figure img{
+  flex:1; min-height:0; width:100%; max-height:none; object-fit:contain; }
+.reveal .slides section .image-mode-wide-hero{ grid-template-rows:minmax(0,1fr) auto; }
+.reveal .slides section .image-mode-side-dominant{ grid-template-rows:minmax(0,1fr); }
+.reveal .slides section .image-mode-side .image-copy{ justify-content:center; }
+
+/* ---- 卡片 detail 的公式兼容（v1.4）：文本包在块级 span 内，
+   行内公式不再被 .card-detail 的 flex 布局拆散；data-fit-text 移到该 span，
+   align-self:stretch 保证 fit 二分法所需的受约束高度 ---- */
+.card-detail{ overflow:hidden; }
+.cd-text{ display:block; width:100%; align-self:stretch; overflow:hidden; }
+
+/* ---- 其他 ---- */
+/* 普通内容页预留统一眉题区；无眉题时仍保留，标题顶部不随内容变化。 */
+.reveal .slides section:is(.layout-bullets,.layout-image,.layout-image-text,.layout-compare,.layout-table,.layout-roadmap,.layout-conclusion){ padding-top:72px; }
+.reveal .slides section:is(.layout-bullets,.layout-image,.layout-image-text,.layout-compare,.layout-table,.layout-roadmap,.layout-conclusion) > .kicker{
+  position:absolute; top:34px; left:52px; right:52px; height:28px;
+  line-height:28px; margin:0; white-space:nowrap;
+}
+.reveal .slides section:is(.layout-bullets,.layout-image,.layout-image-text,.layout-compare,.layout-table,.layout-roadmap,.layout-conclusion) > h2{ flex:0 0 auto; }
+.reveal .fragment{ transition:none; }
+/* 页码页脚（v1.4.2）：与 cite 脚注同一基线——右侧 52px 对齐内容边距、
+   bottom 16px 与 cite 文字同行；去掉 vendor 默认的深色 chip 与 Helvetica。
+   覆盖 reveal.css 同优先级规则（本文件在其后加载，后者胜出）。 */
+.reveal .slide-number{
+  right:52px; bottom:16px; padding:0; background:none;
+  font-family:inherit; font-size:16px; line-height:1.4;
+  color:var(--faint); white-space:nowrap;
+}

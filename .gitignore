@@ -1,0 +1,10 @@
+**/__pycache__/
+**/*.py[cod]
+.DS_Store
+Thumbs.db
+.checkpoints/
+backups/
+**/node_modules/
+decks/*/output/
+decks/*/.checkpoints/
+

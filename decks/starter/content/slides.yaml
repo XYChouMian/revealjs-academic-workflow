@@ -1,0 +1,107 @@
+deck:
+  title: 学术演示工作流 · Starter
+  author: Your Name
+  date: 2026-11-14
+
+slides:
+  - slide_id: s01-cover
+    layout: cover
+    kicker: Starter Deck
+    title: 从一个可验证的中心问题开始
+    content:
+      subtitle: slides.yaml → Reveal.js → 静态与浏览器验收
+      concern: 本示例只验证工作流；正式 deck 应以学术证据和听众决策为中心
+      meta: [16:9 · 离线依赖, Presenter Notes · 页码页脚]
+    cite: academic-presentation v1.4.2
+    sources: [工作流示例]
+    notes: >
+      本页展示封面布局。正式汇报应在开场说明听众、目的、核心认识和需要讨论的问题。
+
+  - slide_id: s02-argument
+    layout: compare
+    kicker: 1 · 论点结构
+    title: 每页只推进一个判断
+    content:
+      card_mode: hierarchy
+      cols:
+        - index: 问题
+          title: 为什么需要这一页？
+          thesis: 承接上一页留下的问题
+          detail: 先给听众一个明确的问题，再展示证据；避免把文献、模型和结论平铺成清单。
+          cue: Notes 中解释与前后页的关系
+        - index: 证据
+          title: 什么支持这个判断？
+          thesis: 证据等级必须可追溯
+          detail: 区分原文已证、报告解释、跨文献推断和未验证假设；图片必须承担解释任务。
+          cue: sources 与 cite 不可缺失
+        - index: 结论
+          title: 下一页为何必须出现？
+          thesis: 结论应产生新的问题
+          detail: 页尾收束本页回答，并明确尚未解决的变量、边界或决策，从而推动叙事继续。
+          cue: 不用纯串场代替逻辑
+    cite: presentation-workflow.md · 阶段 1
+    sources: [工作流规范 · 内容策划]
+    notes: >
+      本页验证分层卡片。三栏分别对应问题、证据和结论；正式内容应根据科学论证调整，而不是机械套用。
+
+  - slide_id: s03-table
+    layout: table
+    kicker: 2 · 验收
+    title: 构建完成不等于演示可用
+    content:
+      table_mode: spacious
+      headers: [检查层, 主要问题, 通过条件]
+      rows:
+        - [内容, 论点与证据是否一致, 关键结论可追溯]
+        - [结构, 页面是否形成问题链, 前后页有明确承接]
+        - [视觉, 字号、行高、主图与表格是否可读, 无溢出与裁切]
+        - [技术, Notes、资源、MathJax 与 Mermaid 是否正常, 无 P0/P1]
+      note: P2 只记录；达到停止条件后交付，不无限润色。
+    cite: academic-presentation · 阶段 5–6
+    sources: [工作流规范 · 自动验收与定向修复]
+    notes: >
+      本页验证舒适表格和页脚安全区。正式验收先批量检查，再集中看截图，最后进行最多两轮定向修复。
+
+  - slide_id: s04-formula-mermaid
+    layout: bullets
+    kicker: 3 · 技术骨架
+    title: 公式与流程图必须离线稳定渲染
+    content:
+      lead: 重建问题可统一写为 $y=\mathcal{H}(q)+\varepsilon$
+      bullets:
+        - $q$ 是待恢复状态，$\mathcal{H}$ 是测量算子，$\varepsilon$ 是噪声
+        - MathJax 与 Mermaid 均由本地 vendor 加载，不依赖 CDN
+        - 构建器检查 YAML 字段、公式转义、Notes、sources 与资源路径
+        - 浏览器检查逐页截图、溢出、引用安全区和运行时错误
+      mermaid: |
+        flowchart LR
+          A[slides.yaml] --> B[build.py]
+          B --> C[output/index.html]
+          C --> D[validate.py --visual]
+      callout:
+        text: 技术骨架只保证内容被可靠呈现；学术论点、证据等级和叙事推进仍由内容作者负责。
+    cite: Reveal.js 4.6.1 · MathJax 3.2.2 · Mermaid 10.9.1
+    sources: [工作流技术骨架]
+    notes: >
+      本页同时验证 LaTeX 公式和 Mermaid。浏览器验收会捕捉公式错误、流程图渲染失败和页面溢出。
+
+  - slide_id: s05-image
+    layout: image-text
+    kicker: 4 · 独立资源
+    title: 科研图片应承担解释任务
+    content:
+      image_mode: side-dominant
+      image:
+        src: assets/diagrams/workflow.svg
+        caption: Starter 自绘流程图，仅用于验证独立 SVG 资源加载
+      bullets:
+        - 论文 Figure 优先从原始 PDF 提取
+        - 自绘示意图必须标明其不是论文原图
+        - 构建器自动将 assets 复制到 output 同级目录
+      callout:
+        text: 图片模式由作者按科学角色显式选择，不由构建器猜测。
+    cite: presentation-workflow.md · 阶段 2
+    sources: [工作流示例 · 独立绘图]
+    notes: >
+      本页验证独立 SVG、图片主导双栏、图注与 Notes。正式图片必须在资源清单中记录来源和科学含义。
+
