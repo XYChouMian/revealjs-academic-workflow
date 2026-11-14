@@ -14,6 +14,21 @@
   --purple:#7b4fa6;   /* 机制/注意力类 */
   --teal:#0f766e;     /* 物理/守恒类 */
 }
+/* 全局章节导航：固定高度，Reveal 在剩余视口中等比缩放，内部版面不变。 */
+.has-chapter-nav{ --chapter-nav-height:52px; }
+.has-chapter-nav .reveal{ position:absolute; left:0; right:0; top:var(--chapter-nav-height); height:calc(100% - var(--chapter-nav-height)); }
+.chapter-nav{ box-sizing:border-box; position:absolute; top:0; left:0; right:0; height:52px; z-index:30;
+  display:flex; align-items:stretch; padding:0 12px; gap:6px;
+  background:var(--bg); border-bottom:1px solid var(--line);
+  font-family:"Times New Roman","SimSun",serif; font-size:20px; }
+.chapter-track{ display:flex; flex:1; min-width:0; overflow-x:auto; align-items:stretch; gap:8px; scrollbar-width:thin; }
+.chapter-track a{ display:flex; align-items:center; flex:0 0 auto; padding:0 12px;
+  color:var(--sub); text-decoration:none; white-space:nowrap; border-bottom:3px solid transparent; }
+.chapter-track a[aria-current]{ color:var(--accent); border-bottom-color:var(--accent); background:#eef2f7; font-weight:700; }
+.chapter-nav button{ flex:0 0 28px; padding:0; border:0; background:transparent; color:var(--accent); font:28px serif; cursor:pointer; }
+.chapter-nav button:disabled{ opacity:.2; cursor:default; }
+.chapter-nav :focus-visible{ outline:2px solid var(--accent); outline-offset:-3px; }
+@media print{ .chapter-nav{ display:none; } .has-chapter-nav .reveal{ top:0; height:100%; } }
 .reveal-viewport{ background:var(--bg); }
 .reveal{
   font-family:"Times New Roman","STSong","SimSun","Songti SC","Noto Serif CJK SC",serif;

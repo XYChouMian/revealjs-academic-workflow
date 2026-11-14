@@ -1,5 +1,14 @@
 # Portable workflow validation
 
+## 2026-11-14 · v1.5.0 自动章节导航
+
+- 仅 `deck.chapter_nav: true` 启用；章节名、顺序、归属与高亮全部自动生成。缺省/false/无章节时不占空间。
+- 修改前已保存 starter checkpoint 与模板/构建器备份。vendor 版本不变。
+- `node tests/chapter-nav.mjs`：真实浏览器验证开关、缺省、无章节、非法配置、8 章长目录滚动、点击跳章、地址直达、章节归属、视口缩放、带/不带眉题的标题对齐，全部通过。
+- 全量 deck 重建与 --visual：starter 5 页 P0=0/P1=0/P2=0；chapter-nav 5 页 P0=0/P1=0/P2=1。
+- P2：chapter-nav 的简短功能说明页自然留白（sparse-page），记录后停止润色。
+- 人工截图复核：章节导航高亮清楚，表格标题对齐且行高舒适；导航与完整幻灯片分区显示，无裁切。
+
 ## 2026-11-14 · v1.4.3 标题对齐与表格修复
 
 - 修改前保存 starter checkpoint 与模板备份。

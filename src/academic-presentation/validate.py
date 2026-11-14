@@ -102,6 +102,8 @@ class BalanceChecker(HTMLParser):
 
 def check_yaml(data, D):
     deck = data.get("deck") or {}
+    if not isinstance(deck.get("chapter_nav", False), bool):
+        D.add("P1", "yaml-chapter-nav", "deck.chapter_nav 必须是 true 或 false")
     if not deck.get("title"):
         D.add("P1", "yaml-deck-title", "deck.title 缺失")
     slides = data.get("slides") or []

@@ -10,7 +10,7 @@ description: >
 
 # academic-presentation · 学术演示文稿生产技能
 
-**版本：v1.4.3（2026-11-14）。** 普通内容页统一标题顶部位置，表格伸展仅作用于表格容器。v1.0 骨架与离线依赖保持冻结。v1.2 固化内容层级、舒适表格、
+**版本：v1.5.0（2026-11-14）。** `deck.chapter_nav: true` 一行启用自动章节导航，提取 section 标题并同步当前章；缺省关闭。v1.4.3 普通内容页统一标题顶部位置，表格伸展仅作用于表格容器。v1.0 骨架与离线依赖保持冻结。v1.2 固化内容层级、舒适表格、
 显式图片比例模式与字号/行高自适应；v1.3 根因修复“内容堆上半部、下半部大块留白”（布局类 +
 内容区纵向撑满 + sparse-page 检查）；v1.4 实现“排版免操心”六项（图片自适应、字段 schema 硬校验、
 YAML 转义检查、卡片 detail 公式兼容、cite 碰撞检测、表格模式提示）；v1.4.1 一键构建 bat 与
@@ -74,7 +74,7 @@ python src/academic-presentation/build.py restore   <deck> <标签>   # 大范�
 ## slides.yaml 最小 schema
 
 ```yaml
-deck: { title, author, date }
+deck: { title, author, date, chapter_nav: false }  # 可选开关，true 启用自动章节导航
 slides:
   - slide_id: s01-cover            # 唯一、稳定
     layout: cover                  # cover|section|bullets|image|image-text|compare|table|roadmap|conclusion|html

@@ -59,6 +59,25 @@ python src/academic-presentation/validate.py decks/<名称> --visual
 用 academic-presentation 把〈资料路径〉做成〈时长〉、面向〈听众〉的汇报。
 ```
 
+## 自动章节导航
+
+只需在 `content/slides.yaml` 设置：
+
+```yaml
+deck:
+  title: 我的汇报
+  chapter_nav: true
+```
+
+导航自动提取 `layout: section` 页的 `title`，各内容页归属于前面最近的章节。
+点击章名可跳转，翻页与地址直达自动同步高亮。封面和首章之前的页面不高亮章节。
+长目录横向滚动，当前章节自动移入可视区，也可使用两侧按钮、触摸或导航内的左右方向键滚动。
+导航占据独立的 52px 顶部空间，幻灯片在剩余视口等比显示，内部标题、表格和图片布局保持原样。
+设为 `false` 或省略时关闭；没有章节页时不生成导航、不预留空间。值必须为布尔值，不要加引号。
+
+可运行 `python src/academic-presentation/build.py decks/chapter-nav` 查看五页示例。
+开发回归运行 `node tests/chapter-nav.mjs`（先按首次安装步骤安装依赖）。
+
 ## Git 使用
 
 本目录已经初始化为独立 Git 仓库；父项目根目录没有初始化。首次提交前可先用 `git status` 检查纳入范围，再关联远程仓库。

@@ -38,6 +38,7 @@ window.MathJax = {
 </style>
 </head>
 <body>
+<script id="chapter-data" type="application/json">{{CHAPTER_DATA}}</script>
 <div class="reveal"><div class="slides">
 {{SLIDES}}
 </div></div>
@@ -115,7 +116,72 @@ window.MathJax = {
     overview: true,
     plugins: [ RevealNotes ]
   });
+  /* 章节由构建器从 section 页提取；导航不占用幻灯片内部空间。 */
+  var chapters = JSON.parse(document.getElementById('chapter-data').textContent);
+  var chapterLinks = [];
+  var chapterTrack;
+  function syncChapter(){
+    if (!chapterTrack) return;
+    var current = deck.getIndices().h;
+    var active = -1;
+    chapters.forEach(function(chapter, i){ if (chapter.index <= current) active = i; });
+    chapterLinks.forEach(function(link, i){
+      if (i === active) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    });
+    if (active >= 0) {
+      var link = chapterLinks[active];
+      var left = link.offsetLeft - chapterTrack.offsetLeft;
+      if (left < chapterTrack.scrollLeft || left + link.offsetWidth > chapterTrack.scrollLeft + chapterTrack.clientWidth) {
+        chapterTrack.scrollLeft = left - (chapterTrack.clientWidth - link.offsetWidth) / 2;
+      }
+    }
+    updateChapterEdges();
+  }
+  var chapterPrev, chapterNext;
+  function updateChapterEdges(){
+    if (!chapterTrack) return;
+    chapterPrev.disabled = chapterTrack.scrollLeft <= 1;
+    chapterNext.disabled = chapterTrack.scrollLeft + chapterTrack.clientWidth >= chapterTrack.scrollWidth - 1;
+  }
+  if (chapters.length) {
+    var nav = document.createElement('nav');
+    nav.className = 'chapter-nav';
+    nav.setAttribute('aria-label', '章节导航');
+    chapterTrack = document.createElement('div');
+    chapterTrack.className = 'chapter-track';
+    function scrollButton(label, text, direction){
+      var button = document.createElement('button');
+      button.type = 'button'; button.textContent = text;
+      button.setAttribute('aria-label', label);
+      button.addEventListener('click', function(){ chapterTrack.scrollLeft += direction * chapterTrack.clientWidth * 0.7; });
+      return button;
+    }
+    chapterPrev = scrollButton('向左滚动章节', '‹', -1);
+    chapterNext = scrollButton('向右滚动章节', '›', 1);
+    chapters.forEach(function(chapter){
+      var link = document.createElement('a');
+      link.textContent = chapter.title;
+      link.href = '#/' + chapter.id;
+      link.addEventListener('click', function(event){ event.preventDefault(); deck.slide(chapter.index); });
+      chapterTrack.appendChild(link); chapterLinks.push(link);
+    });
+    nav.appendChild(chapterPrev); nav.appendChild(chapterTrack); nav.appendChild(chapterNext);
+    document.body.insertBefore(nav, document.body.firstChild);
+    document.body.classList.add('has-chapter-nav');
+    chapterTrack.addEventListener('scroll', updateChapterEdges);
+    // 在导航内操作方向键时，仅滚动导航，不意外翻动幻灯片。
+    nav.addEventListener('keydown', function(event){
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        event.stopPropagation(); event.preventDefault();
+        chapterTrack.scrollLeft += (event.key === 'ArrowLeft' ? -1 : 1) * 180;
+      }
+    });
+    deck.on('slidechanged', syncChapter);
+    deck.on('resize', syncChapter);
+  }
   function ready(){
+    syncChapter();
     var kick = function(){ deck.layout(); fitDeclaredText(); renderMermaidIn(deck.getCurrentSlide()); };
     if (window.MathJax && MathJax.startup && MathJax.startup.promise) {
       MathJax.startup.promise.then(kick);

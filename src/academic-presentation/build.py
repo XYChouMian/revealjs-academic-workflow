@@ -414,6 +414,9 @@ def build(deck_dir):
                     "或去掉引号/改用单引号包裹并保留单反斜杠（$\\tau$）")
         sys.exit(f"[build] slides.yaml 语法错误（{hint}）:\n{ex}")
     deck_meta = data.get("deck", {})
+    chapter_nav = deck_meta.get("chapter_nav", False)
+    if not isinstance(chapter_nav, bool):
+        sys.exit("[build] deck.chapter_nav 必须是 true 或 false")
     slides = data.get("slides") or []
     if not slides:
         sys.exit("[build] slides.yaml 中没有任何页面")
@@ -432,12 +435,21 @@ def build(deck_dir):
     except ValueError as ex:
         sys.exit(f"[build] {ex}")
     template = TEMPLATE.read_text(encoding="utf-8")
+    chapters = []
+    if chapter_nav:
+        for i, slide in enumerate(slides):
+            if slide.get("layout") == "section":
+                chapters.append({"index": i, "id": slide["slide_id"],
+                                 "title": re.sub(r"<[^>]*>", "", html_lib.unescape(str(slide.get("title", ""))))})
+    # JSON 数据不作为 HTML 执行；转义 < 防止标题中的 </script> 提前结束数据块。
+    chapter_data = json.dumps(chapters, ensure_ascii=False).replace("<", "\\u003c")
     deck_css_tag = ""
     if (deck_dir / "content" / "deck.css").exists():
         deck_css_tag = '\n<link rel="stylesheet" href="deck.css">'
     html = (template
             .replace("{{DECK_TITLE}}", e(deck_meta.get("title", "学术汇报")))
             .replace("{{DECK_CSS_TAG}}", deck_css_tag)
+            .replace("{{CHAPTER_DATA}}", chapter_data)
             .replace("{{SLIDES}}", slides_html))
 
     out_dir.mkdir(parents=True, exist_ok=True)
