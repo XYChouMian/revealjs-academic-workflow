@@ -64,7 +64,7 @@
 模板 `templates/academic-reveal/` + `vendor/` 已通过验证（2026-10-21，见 design-lessons.md），
 **含固定版本：Reveal.js 4.6.1 / MathJax 3.2.2 / Mermaid 10.9.1，完全离线**。
 
-- 新环境首次使用或模板被改动过 → 用 `decks/skeleton-test/` 跑
+- 新环境首次使用或模板被改动过 → 用唯一示例 `decks/starter/` 跑
   `build.py` + `validate.py --visual`，并人工查看 `output/screenshots/` 三张代表页
   （文字/图片布局页、公式+Mermaid 页、SVG+表格+Notes 页）。
 - 通过后冻结骨架；任何 deck 不得重写 vendor 加载、初始化脚本、公共 CSS。

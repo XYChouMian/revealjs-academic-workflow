@@ -1,5 +1,14 @@
 # Portable workflow validation
 
+## 2026-11-14 · v1.5.1 唯一功能示例
+
+- 仅保留 `decks/starter/`，15 张短页覆盖全部 10 种 layout、三种图片模式、三种表格模式、富层级卡片、fit_text 字号与行高、公式、Mermaid、SVG、fragment、导航、Notes、来源与页码。默认/兼容写法在对应 Notes 说明，避免重复页面。
+- 重复 chapter-nav deck 移至忽略目录 backups，可恢复；回归测试动态创建的临时数据不作为展示 deck。
+- 全布局构建暴露既有 schema 遗漏：image 渲染器的 src/caption/alt 与 html 渲染器的 html 字段被错误拒绝，已补齐允许字段。
+- starter 完整重建及 --visual：P0=0/P1=0/P2=1；唯一 P2 为特殊 HTML/fragment 演示页的自然留白，不追加装饰内容。
+- 导航真实浏览器回归通过。人工查看卡片、图片、表格及公式相关截图，资源无裁切，标题与页脚正常。
+- 人工维护入口统一为 content/slides.yaml；README 与流程骨架验证入口均已同步。
+
 ## 2026-11-14 · v1.5.0 自动章节导航
 
 - 仅 `deck.chapter_nav: true` 启用；章节名、顺序、归属与高亮全部自动生成。缺省/false/无章节时不占空间。

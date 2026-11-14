@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="280" viewBox="0 0 1200 280" role="img" aria-labelledby="title">
+  <title id="title">问题、论证和交付的横向流程</title>
+  <rect width="1200" height="280" rx="24" fill="#eef2f7"/>
+  <path d="M250 140H950" stroke="#1560bd" stroke-width="8"/>
+  <g fill="#fff" stroke="#1560bd" stroke-width="3"><rect x="60" y="60" width="280" height="160" rx="18"/><rect x="460" y="60" width="280" height="160" rx="18"/><rect x="860" y="60" width="280" height="160" rx="18"/></g>
+  <g text-anchor="middle" font-family="serif" font-size="40" fill="#1c1c1c"><text x="200" y="154">问题</text><text x="600" y="154">论证</text><text x="1000" y="154">交付</text></g>
+</svg>

@@ -45,9 +45,10 @@ CARD_MODES = {"standard", "hierarchy"}
 # 静默丢弃——这里在构建期硬校验，杜绝"字段写了不生效"的事故。
 LAYOUT_FIELDS = {
     "cover": {"subtitle", "concern", "meta"},
+    "html": {"html"},
     "section": {"no", "points", "point_mode"},
     "bullets": {"lead", "bullets", "callout", "box", "mermaid"},
-    "image": {"image", "bullets", "mermaid"},
+    "image": {"src", "caption", "alt", "image", "bullets", "mermaid"},
     "image-text": {"image", "side", "image_mode", "bullets", "callout", "mermaid"},
     "compare": {"cols", "card_mode", "callout", "fit_text", "mermaid"},
     "table": {"headers", "rows", "highlight_row", "table_mode", "dense", "note", "mermaid"},

@@ -10,7 +10,7 @@
 - `src/academic-presentation/`：构建、校验和浏览器视觉检查程序。
 - `templates/academic-reveal/`：Reveal.js HTML、公共样式和一键构建模板。
 - `vendor/`：固定版本的 Reveal.js、MathJax 与 Mermaid 离线依赖。
-- `decks/starter/`：可直接构建的最小示例。
+- `decks/starter/`：唯一功能展示示例，15 张短页覆盖所有布局及主要模式。
 - `docs/TEST-REPORT.md`：原工作流的历史回归证据，仅作来源记录。
 
 未纳入历史备份、Python 缓存、`node_modules`、论文库和任何具体调研内容。
@@ -39,12 +39,12 @@ python src/academic-presentation/validate.py decks/starter --visual
 
 ## 新建演示稿
 
-复制 `decks/starter/` 为一个新目录，仅编辑：
+Agent 以 `decks/starter/` 为参考创建新目录，使用者只需审查或修改 `content/slides.yaml`。
+以下配套文件由工作流自动维护：
 
-- `content/slides.yaml`：唯一内容源；
-- `content/deck.css`：只有公共样式不足时才添加；
+- `content/deck.css`：仅特殊情况需要；
 - `assets/`：论文图、实验图和独立示意图；
-- `assets-manifest.md`：记录图片来源与科学含义。
+- `assets-manifest.md`：图片来源与含义记录。
 
 然后运行：
 
@@ -75,7 +75,7 @@ deck:
 导航占据独立的 52px 顶部空间，幻灯片在剩余视口等比显示，内部标题、表格和图片布局保持原样。
 设为 `false` 或省略时关闭；没有章节页时不生成导航、不预留空间。值必须为布尔值，不要加引号。
 
-可运行 `python src/academic-presentation/build.py decks/chapter-nav` 查看五页示例。
+章节导航已集成在唯一示例 `decks/starter/` 中。
 开发回归运行 `node tests/chapter-nav.mjs`（先按首次安装步骤安装依赖）。
 
 ## Git 使用

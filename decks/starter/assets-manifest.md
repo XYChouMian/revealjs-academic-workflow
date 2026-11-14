@@ -1,8 +1,9 @@
-# Starter 资源清单
+# 功能示例资源清单
 
-| 路径 | 来源 | 页面 | 科学含义 | 类型 | 已验证 |
+所有图件均为功能展示用自绘 SVG，非论文原图，不包含实验数据。
+
+| 路径 | 来源 | 页面 | 用途与比例 | 类型 | 已验证 |
 |---|---|---|---|---|---|
-| `assets/diagrams/workflow.svg` | Starter 自绘 | s05-image | 展示证据到验收的工作流 | 独立 SVG，非论文原图 | 是 |
-
-正式 deck 的每个资源都应记录：路径、来源、对应页面、科学含义、原图或重绘、是否已验证。
-
+| `assets/diagrams/workflow.svg` | 本工作流自绘 | s10-image、s12-dominant | 证据至验收流程，960×520 | 独立 SVG | 是 |
+| `assets/diagrams/square.svg` | 本工作流自绘 | s11-side | 问题/证据/结论关系，600×600 | 独立 SVG | 是 |
+| `assets/diagrams/wide.svg` | 本工作流自绘 | s13-hero | 问题至交付流程，1200×280 | 独立 SVG | 是 |
