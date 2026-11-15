@@ -117,14 +117,18 @@ window.MathJax = {
     plugins: [ RevealNotes ]
   });
   /* 章节由构建器从 section 页提取；导航不占用幻灯片内部空间。 */
-  var chapters = JSON.parse(document.getElementById('chapter-data').textContent);
+  var chapterInfo = JSON.parse(document.getElementById('chapter-data').textContent);
+  var chapters = chapterInfo.chapters || [];
+  var mainEnd = Number.isInteger(chapterInfo.mainEnd) ? chapterInfo.mainEnd : Infinity;
   var chapterLinks = [];
   var chapterTrack;
   function syncChapter(){
     if (!chapterTrack) return;
     var current = deck.getIndices().h;
     var active = -1;
-    chapters.forEach(function(chapter, i){ if (chapter.index <= current) active = i; });
+    if (current < mainEnd) {
+      chapters.forEach(function(chapter, i){ if (chapter.index <= current) active = i; });
+    }
     chapterLinks.forEach(function(link, i){
       if (i === active) link.setAttribute('aria-current', 'location');
       else link.removeAttribute('aria-current');

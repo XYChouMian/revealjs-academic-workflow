@@ -35,7 +35,8 @@ VENDOR = REPO_ROOT / "vendor"
 
 KNOWN_LAYOUTS = {
     "cover", "section", "bullets", "image", "image-text",
-    "compare", "table", "roadmap", "conclusion", "html",
+    "compare", "table", "roadmap", "conclusion", "chapter-overview",
+    "ending", "html",
 }
 IMAGE_MODES = {"side", "side-dominant", "wide-hero"}
 TABLE_MODES = {"standard", "spacious", "compact"}
@@ -54,6 +55,8 @@ LAYOUT_FIELDS = {
     "table": {"headers", "rows", "highlight_row", "table_mode", "dense", "note", "mermaid"},
     "roadmap": {"steps", "card_mode", "fit_text", "mermaid", "note"},
     "conclusion": {"takeaways", "open", "next", "conclusion_mode", "labels", "callout"},
+    "chapter-overview": set(),
+    "ending": {"subtitle", "prompt", "meta"},
 }
 
 
@@ -335,6 +338,34 @@ def r_conclusion(slide):
     return "".join(parts)
 
 
+def r_chapter_overview(slide, chapters):
+    """自动列出正文 ending 之前的 section；YAML 不维护第二份目录。"""
+    parts = [kicker_html(slide), f"  <h2>{e(slide.get('title',''))}</h2>\n",
+             f'  <div class="chapter-overview-list count-{len(chapters)}">\n']
+    for i, chapter in enumerate(chapters, 1):
+        parts.append(f'    <a class="chapter-overview-item" href="#/{_attr(chapter["id"])}">\n')
+        parts.append(f'      <span class="chapter-overview-number">{i:02d}</span>\n')
+        parts.append(f'      <span class="chapter-overview-title">{e(chapter["title"])}</span>\n')
+        parts.append('      <span class="chapter-overview-arrow" aria-hidden="true">→</span>\n')
+        parts.append("    </a>\n")
+    parts.append("  </div>\n")
+    return "".join(parts)
+
+
+def r_ending(slide):
+    c = slide.get("content", {})
+    parts = [kicker_html(slide), f"  <h1>{e(slide.get('title',''))}</h1>\n"]
+    if c.get("subtitle"):
+        parts.append(f'  <div class="ending-subtitle">{e(c["subtitle"])}</div>\n')
+    if c.get("prompt"):
+        parts.append(f'  <div class="ending-prompt">{e(c["prompt"])}</div>\n')
+    if c.get("meta"):
+        meta = c["meta"]
+        text = " · ".join(e(v) for v in meta) if isinstance(meta, list) else e(meta)
+        parts.append(f'  <div class="ending-meta">{text}</div>\n')
+    return "".join(parts)
+
+
 def r_html(slide):
     """逃生舱：整页原生 HTML（迁移已验证页面时使用）。"""
     c = slide.get("content", {})
@@ -355,11 +386,12 @@ RENDERERS = {
     "cover": r_cover, "section": r_section, "bullets": r_bullets,
     "image": r_image, "image-text": r_image_text, "compare": r_compare,
     "table": r_table, "roadmap": r_roadmap, "conclusion": r_conclusion,
+    "ending": r_ending,
     "html": r_html,
 }
 
 
-def render_slide(slide, idx):
+def render_slide(slide, idx, chapters):
     layout = slide.get("layout")
     if layout not in KNOWN_LAYOUTS:
         raise ValueError(f"[{slide.get('slide_id', idx)}] 未知 layout: {layout!r}，可用: {sorted(KNOWN_LAYOUTS)}")
@@ -395,8 +427,10 @@ def render_slide(slide, idx):
         cls += " cover"
     elif layout == "section":
         cls += " section-slide"
+    elif layout == "ending":
+        cls += " ending-slide"
     attrs += f' class="{cls}"'
-    body = RENDERERS[layout](slide)
+    body = r_chapter_overview(slide, chapters) if layout == "chapter-overview" else RENDERERS[layout](slide)
     # 供视觉检查判断"该页应出现公式渲染产物"（排除 mermaid 源码块，其内容由 MathJax skip）
     probe = re.sub(r"<pre class=\"mermaid\">.*?</pre>", "", body, flags=re.S)
     if "$" in probe or "\\(" in probe or "\\[" in probe:
@@ -435,19 +469,31 @@ def build(deck_dir):
             raise ValueError(f"slide_id 重复: {sid}")
         seen.add(sid)
 
+    ending_indices = [i for i, slide in enumerate(slides) if slide.get("layout") == "ending"]
+    if len(ending_indices) > 1:
+        sys.exit("[build] ending 页面只能有一个；它定义正文与附录的唯一边界")
+    main_end = ending_indices[0] if ending_indices else len(slides)
+    chapters = []
+    for i, slide in enumerate(slides[:main_end]):
+        if slide.get("layout") == "section":
+            title = re.sub(r"<[^>]*>", "", html_lib.unescape(str(slide.get("title", ""))))
+            chapters.append({"index": i, "id": slide["slide_id"], "title": title})
+    overview_indices = [i for i, slide in enumerate(slides) if slide.get("layout") == "chapter-overview"]
+    if overview_indices and not chapters:
+        sys.exit("[build] chapter-overview 无可展示的正文 section；请在 ending 前添加章节页")
+    if any(i >= main_end for i in overview_indices):
+        sys.exit("[build] chapter-overview 必须位于 ending 之前")
+    if overview_indices and len(chapters) > 8:
+        sys.exit(f"[build] chapter-overview 当前最多展示 8 章，检测到 {len(chapters)} 章；请合并正文章节")
+
     try:
-        slides_html = "\n".join(render_slide(s, i) for i, s in enumerate(slides))
+        slides_html = "\n".join(render_slide(s, i, chapters) for i, s in enumerate(slides))
     except ValueError as ex:
         sys.exit(f"[build] {ex}")
     template = TEMPLATE.read_text(encoding="utf-8")
-    chapters = []
-    if chapter_nav:
-        for i, slide in enumerate(slides):
-            if slide.get("layout") == "section":
-                chapters.append({"index": i, "id": slide["slide_id"],
-                                 "title": re.sub(r"<[^>]*>", "", html_lib.unescape(str(slide.get("title", ""))))})
     # JSON 数据不作为 HTML 执行；转义 < 防止标题中的 </script> 提前结束数据块。
-    chapter_data = json.dumps(chapters, ensure_ascii=False).replace("<", "\\u003c")
+    chapter_data = json.dumps({"chapters": chapters if chapter_nav else [], "mainEnd": main_end},
+                              ensure_ascii=False).replace("<", "\\u003c")
     deck_css_tag = ""
     if (deck_dir / "content" / "deck.css").exists():
         deck_css_tag = '\n<link rel="stylesheet" href="deck.css">'

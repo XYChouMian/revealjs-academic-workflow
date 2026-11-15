@@ -77,14 +77,19 @@
 ## 阶段 4：批量生成
 
 章节导航仅由 `deck.chapter_nav: true` 启用（缺省 false；必须为布尔值）。构建器自动提取
-`layout: section` 的标题与 slide_id，页面归属于此前最近章节；首章前不高亮。
+第一个 `layout: ending` 之前的 `section` 标题与 slide_id，页面归属于此前最近章节；首章前不高亮。
 不维护独立目录或逐页章节字段。导航在顶部独立预留 52px，完整幻灯片在剩余视口等比缩放，
 不改变其内部标题/表格/图片布局。无章节时不生成导航。长章名横向滚动并自动显示当前章。
 修改相关模板后，除全 deck 视觉回归外运行 `node tests/chapter-nav.mjs` 验证交互。
 
+`layout: chapter-overview` 不接受手写目录内容，自动使用同一份正文章节数据生成编号、标题和跳转；
+当前最多 8 章。`layout: ending` 既是结束页模板，也是正文/附录边界：之后的 section 保留章节页
+视觉样式，但不进入总览与导航，且不高亮正文章节。整份 deck 最多一个 ending；省略时所有 section
+均属于正文。chapter-overview 必须位于 ending 前，且正文至少有一个 section。
+
 **输入**：冻结的 slides.yaml + assets。**操作范围**：只运行 `build.py`；不手改 output/。
 
-- 布局只用标准九种；在既有布局上优先使用已验证的可选表现字段，页面级特殊样式才进 `content/deck.css`，
+- 布局只用标准布局；在既有布局上优先使用已验证的可选表现字段，页面级特殊样式才进 `content/deck.css`，
   禁止改动公共 custom.css 来服务单页。
 - 信息卡避免同权重短句堆叠：需要填充并组织版面时，用 `card_mode: hierarchy` 与
   `thesis`（主判断）/ `detail`（解释）/ `cue`（讨论提示）。章节页可用
@@ -165,6 +170,8 @@ F 键全屏）+ 缺陷记录（含未解决的 P2 与待补资源）。
 | table | headers / rows / highlight_row / `table_mode: standard\|spacious\|compact` / dense（兼容）/ note / mermaid |
 | roadmap | steps[{phase, items 或 thesis/detail/cue}] / `card_mode: standard\|hierarchy` / 可选 `fit_text` / mermaid / note |
 | conclusion | takeaways / open / next / 可选 `labels: {takeaways, open, next}`（页面级栏目名）/ `conclusion_mode: standard\|cards` / callout |
+| chapter-overview | 无；自动列出 ending 之前的 section（最多 8 章） |
+| ending | subtitle / prompt / meta（字符串或列表）；同时标记正文结束 |
 | html | html（整页原生 HTML；含 `<section` 时完全接管） |
 
 布局类与纵向撑满（v1.3/v1.4）：build.py 为每页输出 `layout-<布局>` 类；表格（table）、要点

@@ -20,7 +20,7 @@ from pathlib import Path
 import yaml
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-NO_CITE_OK = {"cover", "section"}
+NO_CITE_OK = {"cover", "section", "chapter-overview", "ending"}
 VOID_TAGS = {"img", "br", "hr", "meta", "link", "input", "source", "wbr"}
 IMAGE_MODES = {"side", "side-dominant", "wide-hero"}
 TABLE_MODES = {"standard", "spacious", "compact"}
@@ -110,6 +110,18 @@ def check_yaml(data, D):
     if not slides:
         D.add("P0", "yaml-empty", "slides 为空")
         return []
+    ending_indices = [i for i, slide in enumerate(slides) if slide.get("layout") == "ending"]
+    if len(ending_indices) > 1:
+        D.add("P1", "yaml-ending-count", "ending 页面只能有一个，它定义正文与附录的唯一边界")
+    main_end = ending_indices[0] if ending_indices else len(slides)
+    main_chapters = [s for s in slides[:main_end] if s.get("layout") == "section"]
+    overview_indices = [i for i, slide in enumerate(slides) if slide.get("layout") == "chapter-overview"]
+    if overview_indices and not main_chapters:
+        D.add("P1", "yaml-overview-empty", "chapter-overview 无可展示的正文 section")
+    if any(i >= main_end for i in overview_indices):
+        D.add("P1", "yaml-overview-after-ending", "chapter-overview 必须位于 ending 之前")
+    if overview_indices and len(main_chapters) > 8:
+        D.add("P1", "yaml-overview-many", f"chapter-overview 当前最多展示 8 章，检测到 {len(main_chapters)} 章")
     seen = {}
     for i, s in enumerate(slides):
         sid = s.get("slide_id") or f"<第{i+1}页缺 slide_id>"
@@ -119,6 +131,8 @@ def check_yaml(data, D):
         seen[sid] = True
         if s.get("layout") == "html":
             continue
+        if s.get("layout") in {"chapter-overview", "ending"} and not s.get("title"):
+            D.add("P1", "yaml-title", "缺少 title", sid)
         if not s.get("title") and s.get("layout") not in NO_CITE_OK:
             D.add("P1", "yaml-title", "缺少 title", sid)
         if not (s.get("notes") or "").strip():

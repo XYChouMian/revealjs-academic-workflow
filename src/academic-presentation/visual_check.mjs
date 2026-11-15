@@ -99,7 +99,8 @@ try {
       }
       const bottomGap = Math.round((fr.bottom - 58 * scale) - maxBottom);
       const sparse = bottomGap > 110 * scale &&
-        !slide.classList.contains('cover') && !slide.classList.contains('section-slide');
+        !slide.classList.contains('cover') && !slide.classList.contains('section-slide') &&
+        !slide.classList.contains('ending-slide');
       // 引用脚注安全区：任何内容元素压进 .cite 区域即报告（v1.4，此前靠人眼发现）
       let citeOverlap = null;
       const cite = slide.querySelector('.cite');

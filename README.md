@@ -10,7 +10,7 @@
 - `src/academic-presentation/`：构建、校验和浏览器视觉检查程序。
 - `templates/academic-reveal/`：Reveal.js HTML、公共样式和一键构建模板。
 - `vendor/`：固定版本的 Reveal.js、MathJax 与 Mermaid 离线依赖。
-- `decks/starter/`：唯一功能展示示例，15 张短页覆盖所有布局及主要模式。
+- `decks/starter/`：唯一功能展示示例，19 张短页覆盖所有布局及主要模式。
 - `docs/TEST-REPORT.md`：原工作流的历史回归证据，仅作来源记录。
 
 未纳入历史备份、Python 缓存、`node_modules`、论文库和任何具体调研内容。
@@ -69,7 +69,7 @@ deck:
   chapter_nav: true
 ```
 
-导航自动提取 `layout: section` 页的 `title`，各内容页归属于前面最近的章节。
+导航自动提取第一个 `layout: ending` 之前的 `section.title`，各正文内容页归属于前面最近的章节。
 点击章名可跳转，翻页与地址直达自动同步高亮。封面和首章之前的页面不高亮章节。
 长目录横向滚动，当前章节自动移入可视区，也可使用两侧按钮、触摸或导航内的左右方向键滚动。
 导航占据独立的 52px 顶部空间，幻灯片在剩余视口等比显示，内部标题、表格和图片布局保持原样。
@@ -78,15 +78,48 @@ deck:
 章节导航已集成在唯一示例 `decks/starter/` 中。
 开发回归运行 `node tests/chapter-nav.mjs`（先按首次安装步骤安装依赖）。
 
-## Git 使用
+## 自动章节总览与结束页
+
+总览页不手写目录，只放一个占位页面：
+
+```yaml
+- slide_id: overview
+  layout: chapter-overview
+  title: 汇报结构
+  sources: [本演示文稿章节结构]
+  notes: 自动列出正文所有章节。
+```
+
+构建器自动列出正文 `section` 标题、编号并生成点击跳转。当前支持最多 8 个正文章节。
+
+结束页同时定义正文与附录边界：
+
+```yaml
+- slide_id: ending
+  layout: ending
+  title: 感谢聆听
+  content:
+    subtitle: 核心结束语
+    prompt: 讨论与提问
+    meta: [作者, 联系方式]
+  sources: [汇报结构]
+  notes: ending 之后为附录。
+```
+
+`ending` 之后的 `section` 可继续作为附录章节页，但不会进入章节总览或顶部导航；附录阶段
+不会高亮正文章节。整份 deck 最多一个 `ending`；省略时所有 `section` 均视为正文。
+
+## 图片白底融合
 
 白底融合试用：在图文页的 `content.image` 下添加 `white_background: blend`；独立图片页放在
 `content` 下。省略或设为 `original` 保留原样。原图不变，图片容器白底自动取消。
 这是混合显示而非真实透明，白色内部区域也会融合，彩色区域会受底色影响；定量色图应保留原样。
-唯一示例的第 12 页演示配置，第 14 页展示同图前后对照。
+唯一示例的 `s12-dominant` 演示配置，`s14-html` 展示同图前后对照。
 
 本次试用前的内容 checkpoint 为 `pre-white-background-blend`；模板和构建器备份位于
 忽略目录 `backups/pre-white-background-blend-20261114/`。也可通过本次独立 Git 提交整体撤销。
+
+## Git 使用
 
 本目录已经初始化为独立 Git 仓库；父项目根目录没有初始化。首次提交前可先用 `git status` 检查纳入范围，再关联远程仓库。
 

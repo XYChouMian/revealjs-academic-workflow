@@ -1,5 +1,14 @@
 # Portable workflow validation
 
+## 2026-11-15 · v1.6.0 自动章节总览与结束页边界
+
+- 新增 `chapter-overview`：不维护目录列表，自动读取第一个 ending 前的 section，生成编号、章名与点击跳转；当前最多 8 章。
+- 新增 `ending`：支持 subtitle/prompt/meta，并作为唯一正文结束边界；其后 section 保留章节页样式但不进入总览或顶部导航，附录阶段清除正文高亮。
+- 修改前保存 starter checkpoint `pre-overview-ending` 与模板/构建器/校验器/测试备份 `backups/pre-overview-ending-20261115/`。
+- starter 增加自动总览、结束页和 ending 后的附录 section/内容页，共 19 页；总览截图仅显示两章，导航无附录条目，结束页和附录页均无当前章高亮。
+- 真实浏览器测试覆盖：开关、无 ending、唯一/多个 ending、空总览、总览位于 ending 后、8 章长标题、总览点击、附录直达、附录返回正文、标题对齐与视口缩放，全部通过。
+- 完整 --visual：P0=0/P1=0/P2=1；唯一 P2 为短附录说明页自然留白，记录后停止润色。vendor 未改动。
+
 ## 2026-11-14 · 使用用户 PNG/JPG 截图复核融合
 
 - 第 12 页使用用户 PNG 原件启用 blend；第 14 页上排 PNG、下排 JPG，左右分别原样/融合。同一行使用同一文件，不改写截图。

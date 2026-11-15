@@ -10,7 +10,7 @@ description: >
 
 # academic-presentation · 学术演示文稿生产技能
 
-**版本：v1.5.1（2026-11-14）。** `decks/starter/` 为唯一功能示例，覆盖全部布局；修正 image/html 字段校验遗漏。v1.5.0 的 `deck.chapter_nav: true` 一行启用自动章节导航，提取 section 标题并同步当前章；缺省关闭。v1.4.3 普通内容页统一标题顶部位置，表格伸展仅作用于表格容器。v1.0 骨架与离线依赖保持冻结。v1.2 固化内容层级、舒适表格、
+**版本：v1.6.0（2026-11-15）。** 新增 `chapter-overview` 自动章节总览与 `ending` 结束页；第一个 ending 自动定义正文/附录边界，附录 section 不进入总览和顶部导航。v1.5.1 的 `decks/starter/` 为唯一功能示例，覆盖全部布局。v1.5.0 的 `deck.chapter_nav: true` 一行启用自动章节导航。v1.4.3 普通内容页统一标题顶部位置，表格伸展仅作用于表格容器。v1.0 骨架与离线依赖保持冻结。v1.2 固化内容层级、舒适表格、
 显式图片比例模式与字号/行高自适应；v1.3 根因修复“内容堆上半部、下半部大块留白”（布局类 +
 内容区纵向撑满 + sparse-page 检查）；v1.4 实现“排版免操心”六项（图片自适应、字段 schema 硬校验、
 YAML 转义检查、卡片 detail 公式兼容、cite 碰撞检测、表格模式提示）；v1.4.1 一键构建 bat 与
@@ -77,7 +77,7 @@ python src/academic-presentation/build.py restore   <deck> <标签>   # 大范�
 deck: { title, author, date, chapter_nav: false }  # 可选开关，true 启用自动章节导航
 slides:
   - slide_id: s01-cover            # 唯一、稳定
-    layout: cover                  # cover|section|bullets|image|image-text|compare|table|roadmap|conclusion|html
+    layout: cover                  # 另含 section/bullets/image/image-text/compare/table/roadmap/conclusion/chapter-overview/ending/html
     kicker: 第一部分 · 问题与任务    # 可选眉题
     title: 页标题
     content: { … }                 # 各 layout 字段见 references/presentation-workflow.md 附录A

@@ -15,6 +15,13 @@ slides:
     sources: &sources [模板功能演示，非科研证据]
     notes: 封面布局。导航已启用，但封面不属于任何章节，不高亮。每页包含 notes 与 sources，cite 显示在页脚，右下角自动显示页码。
 
+  - slide_id: s01-overview
+    layout: chapter-overview
+    title: 汇报结构
+    content: {}
+    sources: *sources
+    notes: 本页不手写目录内容。构建器自动读取第一个 ending 之前的 section 标题，编号并生成可点击章名；修改章节页标题后，本页和顶部导航会一起更新。
+
   - slide_id: s02-section
     layout: section
     title: 信息与结构
@@ -225,3 +232,36 @@ slides:
     cite: *cite
     sources: *sources
     notes: conclusion 展示结论卡和自定义栏目名；默认不设 cards 时为纵向结论框。方向键、触摸、Esc 总览、S Notes、F 全屏均由 Reveal 提供。构建、checkpoint/restore 与自动验收属于工作流能力，由脚本验证，无须另加展示页。
+
+  - slide_id: s16-ending
+    layout: ending
+    title: 感谢聆听
+    content:
+      subtitle: 自动化负责呈现，人负责判断与证据
+      prompt: 讨论与提问
+      meta: [academic-presentation, Reveal.js workflow]
+    sources: *sources
+    notes: ending 是视觉结束页，也是正文与附录的结构边界。顶部导航在本页取消高亮；后续 section 不进入章节总览和导航。导航仍保留，可随时返回正文。
+
+  - slide_id: s17-appendix-section
+    layout: section
+    title: 附录 · 配置说明
+    content:
+      'no': A
+      points: [结束页后的章节仍可使用 section 视觉样式, 但不会进入正文目录或顶部导航]
+    sources: *sources
+    notes: 这是 ending 后的附录章节，用来验证自动排除。顶部导航只列“信息与结构”和“图像与交付”，且附录阶段不高亮任何正文章节。
+
+  - slide_id: s18-appendix
+    layout: bullets
+    kicker: 附录
+    title: 结构边界由页面类型自动识别
+    content:
+      bullets:
+        - ending 之前的 section 属于正文章节
+        - ending 之后的 section 属于附录，不进入总览和导航
+        - 整份演示最多一个 ending；缺省时所有 section 都属于正文
+      callout: {text: 不需要逐页填写 exclude_from_nav。}
+    cite: *cite
+    sources: *sources
+    notes: 本页展示附录内容页。它不属于任何正文章节，因此顶部导航没有高亮项；点击导航章名仍可返回正文。
