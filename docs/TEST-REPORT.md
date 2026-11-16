@@ -62,7 +62,7 @@
 
 - 视觉检查依赖系统 Chrome/Edge；两者都缺失时 validate --visual 降级为静态检查（显式报告）。
 - 页面内元素重叠（非溢出型）暂无自动检测，依赖人工视觉轮。
-- vendor 版本固定为 reveal 4.6.1 / MathJax 3.2.2 / mermaid 10.9.1；升级需重跑骨架验证。
+- v1.0 当时的 vendor 固定为 reveal 4.6.1 / MathJax 3.2.2 / mermaid 10.9.1；Mermaid 已在 v1.7.0 升至 11.17.2，升级回归见 `decks/TEST-REPORT.md`。
 - 溢出检测容差为缩放感知的 4px；极端字体环境可能有 ±1px 级出入。
 
 ## 最终验收补充记录（2026-10-21）

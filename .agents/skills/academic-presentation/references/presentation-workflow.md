@@ -62,7 +62,7 @@
 ## 阶段 3：技术骨架验证（强制，先于批量生成）
 
 模板 `templates/academic-reveal/` + `vendor/` 已通过验证（2026-10-21，见 design-lessons.md），
-**含固定版本：Reveal.js 4.6.1 / MathJax 3.2.2 / Mermaid 10.9.1，完全离线**。
+**含固定版本：Reveal.js 4.6.1 / MathJax 3.2.2 / Mermaid 11.17.2，完全离线**。
 
 - 新环境首次使用或模板被改动过 → 用唯一示例 `decks/starter/` 跑
   `build.py` + `validate.py --visual`，并人工查看 `output/screenshots/` 三张代表页

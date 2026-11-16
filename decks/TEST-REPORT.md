@@ -1,5 +1,14 @@
 # Portable workflow validation
 
+## 2026-11-16 · v1.7.0 Mermaid 11 升级
+
+- 离线 Mermaid 从 10.9.1 升级到 11 系列最新稳定版 11.17.2；版本依据 npm 官方版本记录，固定精确版本而非浮动范围。
+- 修改前保存 starter checkpoint `pre-mermaid-11`，旧 bundle 与模板备份于 `backups/pre-mermaid-11-20261116/`。
+- vendor 新增 Mermaid MIT LICENSE 与 VERSION 来源记录；npm integrity 为 `sha512-V6K3C8EBdEsPFZXSKMJe6ppQOENxuHARr9GvHX4hh47lAbhMRD9qf4oEK7LoaRQxULMa80/qt5gHO73aCleBBg==`。
+- `vendor/` 与构建后 `output/vendor/` 的 bundle SHA-256 均为 `581ED7D74BD9048D0E3A91363927D72EF22942D7722546B27F7CC29E35390EB8`。
+- starter 20 页重建并执行 --visual：P0=0/P1=0/P2=1；Mermaid 11 流程图、中文标签、MathJax 共页、导航与页脚均正常。唯一 P2 仍为短附录页自然留白。
+
+
 ## 2026-11-16 · v1.6.1 章节总览纵向排列
 
 - `chapter-overview` 从双列横排改为一章一行的纵向列表；2–8 章按可用高度在 52–96px 内分配行高，章名字号保持 26px。

@@ -9,7 +9,7 @@
 - `.agents/skills/academic-presentation/`：Agent 自动发现入口与工作规范。
 - `src/academic-presentation/`：构建、校验和浏览器视觉检查程序。
 - `templates/academic-reveal/`：Reveal.js HTML、公共样式和一键构建模板。
-- `vendor/`：固定版本的 Reveal.js、MathJax 与 Mermaid 离线依赖。
+- `vendor/`：固定版本的 Reveal.js 4.6.1、MathJax 3.2.2 与 Mermaid 11.17.2 离线依赖。
 - `decks/starter/`：唯一功能展示示例，19 张短页覆盖所有布局及主要模式。
 - `docs/TEST-REPORT.md`：原工作流的历史回归证据，仅作来源记录。
 
