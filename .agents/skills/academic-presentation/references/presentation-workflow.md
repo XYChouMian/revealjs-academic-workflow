@@ -83,6 +83,7 @@
 修改相关模板后，除全 deck 视觉回归外运行 `node tests/chapter-nav.mjs` 验证交互。
 
 `layout: chapter-overview` 不接受手写目录内容，自动使用同一份正文章节数据生成编号、标题和跳转；
+目录固定为一章一行的纵向排列，按章数在 52–96px 范围内自动分配行高，不缩小章名字号。
 当前最多 8 章。`layout: ending` 既是结束页模板，也是正文/附录边界：之后的 section 保留章节页
 视觉样式，但不进入总览与导航，且不高亮正文章节。整份 deck 最多一个 ending；省略时所有 section
 均属于正文。chapter-overview 必须位于 ending 前，且正文至少有一个 section。

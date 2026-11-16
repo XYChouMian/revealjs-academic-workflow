@@ -1,5 +1,12 @@
 # Portable workflow validation
 
+## 2026-11-16 · v1.6.1 章节总览纵向排列
+
+- `chapter-overview` 从双列横排改为一章一行的纵向列表；2–8 章按可用高度在 52–96px 内分配行高，章名字号保持 26px。
+- 修改前保存包含用户当前 starter 内容的 checkpoint `pre-overview-vertical`，公共样式备份于 `backups/pre-overview-vertical-20261116/`。
+- 使用用户当前三章 starter 重建 20 页并执行 --visual：P0=0/P1=0/P2=1；总览截图人工确认三章逐行排列。唯一 P2 仍为短附录页自然留白。
+- 8 章真实浏览器回归通过，纵向列表无内部溢出；导航、ending 边界、附录排除和标题对齐均无回归。
+
 ## 2026-11-15 · v1.6.0 自动章节总览与结束页边界
 
 - 新增 `chapter-overview`：不维护目录列表，自动读取第一个 ending 前的 section，生成编号、章名与点击跳转；当前最多 8 章。
