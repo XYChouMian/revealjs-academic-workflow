@@ -17,7 +17,7 @@ slides:
 
   - slide_id: s01-overview
     layout: chapter-overview
-    title: 汇报结构
+    title: 目录
     content: {}
     sources: *sources
     notes: 本页不手写目录内容。构建器自动读取第一个 ending 之前的 section 标题，编号并生成可点击章名；修改章节页标题后，本页和顶部导航会一起更新。
@@ -218,6 +218,19 @@ slides:
     cite: *cite
     sources: *sources
     notes: 使用用户提供的 white-background.png 和 white-background.jpg 原件，上排 PNG、下排 JPG，左侧原样、右侧 multiply 融合。只比较同一行左右效果，不把两份截图的尺寸、内容差别归因于格式。JPG 可能存在近白色压缩痕迹，融合不是按纯白阈值删除像素。保留 HTML 备用入口与 fragment 演示。常规使用仅需在 image 中设置 white_background 为 blend，如 s12-dominant。热力图、色标与灰度数据图应保留 original。
+
+  - slide_id: s0-summary
+    layout: section
+    title: 总结
+    content:
+      'no': '03'
+      point_mode: hierarchy
+      points:
+        - {term: 解释, detail: 要点与公式, cue: MathJax / Mermaid}
+        - {term: 比较, detail: 卡片与表格, cue: 层级 / 留白}
+        - {term: 组织, detail: 路线与结论, cue: 研究步骤 / 讨论}
+    sources: *sources
+    notes: 章节页自动成为导航入口。本页展示富层级导读卡，下一章展示默认字符串写法。导航名称直接来自本页 title。
 
   - slide_id: s15-conclusion
     layout: conclusion
