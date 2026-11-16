@@ -11,9 +11,9 @@
 - `templates/academic-reveal/`：Reveal.js HTML、公共样式和一键构建模板。
 - `vendor/`：固定版本的 Reveal.js 4.6.1、MathJax 3.2.2 与 Mermaid 11.17.2 离线依赖。
 - `decks/starter/`：唯一功能展示示例，19 张短页覆盖所有布局及主要模式。
-- `docs/TEST-REPORT.md`：原工作流的历史回归证据，仅作来源记录。
+- `decks/TEST-REPORT.md`：当前独立工作流的版本变更与回归记录。
 
-未纳入历史备份、Python 缓存、`node_modules`、论文库和任何具体调研内容。
+未纳入历史迁移记录、备份、构建输出、Python 缓存、`node_modules`、论文库和任何具体调研内容。
 
 ## 首次安装
 
