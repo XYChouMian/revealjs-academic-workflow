@@ -76,10 +76,14 @@
 
 ## 阶段 4：批量生成
 
+画布比例由 `deck.aspect_ratio: "16:9" | "4:3"` 选择，缺省为 16:9；对应逻辑画布为
+1280×720 与 960×720。同一套布局和模板适配两种比例，不复制模板。4:3 只收紧横向组织、减少栏间距，
+不降低字号。视觉检查器按构建清单中的原生画布尺寸截图和测量。
+
 章节导航仅由 `deck.chapter_nav: true` 启用（缺省 false；必须为布尔值）。构建器自动提取
 第一个 `layout: ending` 之前的 `section` 标题与 slide_id，页面归属于此前最近章节；首章前不高亮。
-不维护独立目录或逐页章节字段。导航在顶部独立预留 52px，完整幻灯片在剩余视口等比缩放，
-不改变其内部标题/表格/图片布局。无章节时不生成导航。长章名横向滚动并自动显示当前章。
+不维护独立目录或逐页章节字段。导航覆盖画布顶部的预留带，不再从 Reveal 视口扣除高度；因此开启
+导航不会把 16:9 或 4:3 页面缩成第三种有效比例。无章节时不生成导航。长章名横向滚动并自动显示当前章。
 修改相关模板后，除全 deck 视觉回归外运行 `node tests/chapter-nav.mjs` 验证交互。
 
 `layout: chapter-overview` 不接受手写目录内容，自动使用同一份正文章节数据生成编号、标题和跳转；
@@ -94,7 +98,8 @@
   禁止改动公共 custom.css 来服务单页。
 - 信息卡避免同权重短句堆叠：需要填充并组织版面时，用 `card_mode: hierarchy` 与
   `thesis`（主判断）/ `detail`（解释）/ `cue`（讨论提示）。章节页可用
-  `point_mode: hierarchy`，结论页可用 `conclusion_mode: cards`。
+  `point_mode: hierarchy`，结论页可用 `conclusion_mode: cards`。分层卡片必须保持
+  `title > thesis > detail > cue` 的字号顺序；`fit_text` 只能在该层级内放大 detail，不能反超 thesis。
 - 表格模式选择判据：**行数 ≤6 且单元格文本短的表格必须用 `table_mode: spacious`**（20px 字号、
   58px 行高撑满版面，避免"短表贴顶、下半部大块空白"）；行数 ≥7 或单元格较长时用 `standard`；
   只有确有高密度、且仍可读时才用 `compact`（旧 `dense: true` 兼容映射到该模式）。
@@ -117,6 +122,9 @@
   用默认浏览器打开放映，成功后 cmd 窗口自动关闭；出错（无 python、yaml/字段错误）停窗显示原因。
   bat 内容必须保持纯 ASCII（cmd 按 ANSI 代码页解析，UTF-8 中文会断行）。
   完整验收（含视觉检查）仍走命令行 validate。
+- `一键导出PDF.bat` 同样由 build.py 在缺失时放到 deck 根目录且不覆盖定制文件。它只读取
+  已有 `output/index.html`，输出 deck 根目录 `presentation.pdf`，不会隐式构建或修改 output；
+  内容变化后须先构建。PDF 固定一张幻灯片一页，fragment 显示最终状态，不含导航和 Presenter Notes。
 
 **完成门槛**：build 退出码 0。
 **失败处理**：yaml 语法/字段错误 → 修 yaml 重跑；build.py 报未知 layout → 查附录 A 字段表。
@@ -154,11 +162,19 @@
 主要文字、公式、科研图可读；Notes 正常；外部资源有效；关键论断可溯源；已给运行说明。
 
 **交付物**：deck 目录 + 运行说明（打开 `output/index.html`，方向键翻页，S 键看 Notes，
-F 键全屏）+ 缺陷记录（含未解决的 P2 与待补资源）。
+F 键全屏；需要 PDF 时在构建后运行 `一键导出PDF.bat`）+ 缺陷记录（含未解决的 P2 与待补资源）。
 
 ---
 
 ## 附录 A：layout 字段速查
+
+所有 layout 的 content 均额外支持 `note / callout / box`。三者接受字符串或
+`{label?, text}` 对象，按 note → callout → box 在主体下方统一渲染一次。强度分别为：
+浅灰底细框、浅底左强调线、完整实线框与明显底色；正文统一20px、行高1.45。
+提醒区保留自然高度、不压缩，主体使用剩余高度；放不下时拆分内容，不缩字或截断。
+原生 HTML 页也由外层追加提醒，不在 content.html 内再手写同一提醒。
+`notes` 是独立的 Presenter Notes。兼容 callout.style: main 的强调色；
+box.style: note/tbd 接受但统一为强提醒，不改变结论页原有栏目的样式。
 
 | layout | content 字段 |
 |---|---|
@@ -167,11 +183,12 @@ F 键全屏）+ 缺陷记录（含未解决的 P2 与待补资源）。
 | bullets | lead / bullets / callout{label,text,style:main} / box{style:note\|tbd,text} / mermaid |
 | image | src / caption / alt / bullets / mermaid（max_height 已废弃：v1.4 起图片自动适配剩余高度） |
 | image-text | image{src,caption} / side:left\|right / `image_mode: side\|side-dominant\|wide-hero` / bullets / callout / mermaid（max_height 已废弃） |
+| multi-image | images[{src,title?,content?,alt?,white_background?}] / mode:auto\|manual / gap（默认16）/ callout；manual 另需 columns、rows 正数权重列表，每图 row/column（从1开始）、rowspan/colspan（默认1） |
 | compare | cols[{title,items 或 thesis/detail/cue，html 兼容，highlight}] / `card_mode: standard\|hierarchy` / callout / mermaid |
 | table | headers / rows / highlight_row / `table_mode: standard\|spacious\|compact` / dense（兼容）/ note / mermaid |
 | roadmap | steps[{phase, items 或 thesis/detail/cue}] / `card_mode: standard\|hierarchy` / 可选 `fit_text` / mermaid / note |
 | conclusion | takeaways / open / next / 可选 `labels: {takeaways, open, next}`（页面级栏目名）/ `conclusion_mode: standard\|cards` / callout |
-| chapter-overview | 无；自动列出 ending 之前的 section（最多 8 章） |
+| chapter-overview | 仅通用提醒字段；目录自动列出 ending 之前的 section（最多 8 章） |
 | ending | subtitle / prompt / meta（字符串或列表）；同时标记正文结束 |
 | html | html（整页原生 HTML；含 `<section` 时完全接管） |
 
@@ -185,8 +202,32 @@ deck.css 补丁。html 逃生舱不参与。display 声明带 `!important`：Rev
 build.py 的 LAYOUT_FIELDS）；未引号标量中的 `\` / `\"` 由 validate 的 yaml-escape 检查（P1）。
 
 通用规则：**公式一律用 LaTeX**（行内 `$...$` 或 `\(...\)`），禁止用 Unicode 近似拼公式（如 10·log₁₀(MAX²/MSE)、‖H(q)−y‖² 这类写法）——孤立符号的行文提及（τσ、2Λ、Re）不受此限；yaml 转义规则：双引号串内写双反斜杠、未引号标量写单反斜杠，两法等价，混用会被 yaml-escape 检查拦下。要点可含内联 `<b>/<i>/<sub>/<sup>`、行内公式 `$...$`、`\(...\)`；
-Mermaid 源码用 `content.mermaid` 字段（构建时放入 `pre.mermaid`，公式引擎自动跳过）；
+Mermaid 源码用 `content.mermaid` 字段（构建时放入原生 `.mermaid` div，并用 `tex2jax_ignore` 让公式引擎跳过）；
 图片路径写 `assets/...`（相对 output/；build.py 已自动复制 assets 目录）。
+
+### 多图页面规范
+
+逐图 `content_position` 还支持 `left`：与right镜像，标题和说明整体在图片左侧、垂直居中、
+组合高度不超过实际图片高度；支持同样的25%/33%/40%/50%/70%栏宽及160px最小宽度。
+显式left在auto/manual均生效；未指定时仍使用既有auto选择与manual缺省行为。
+
+每图支持 `content_position: bottom|right`；auto 缺省时比较两者、同分优先下方，manual 缺省下方。
+显式值必须遵守。bottom 下标题位于图片上方、说明在下方，两者水平居中。
+right 下标题与说明一起在右栏上下排列、文字居中，整个文字组合的高度（含8px间距）不得超过图片高度，
+并与实际图片垂直中心对齐。只有标题或说明同样适用，两者都没有不分配右栏。
+图片、文字几何数据由同一测量函数计算并用于评分与最终显示；右栏比较25%/33%/40%/50%/70%，
+最小160逻辑像素。按右栏宽度测量换行后的标题/说明，候选违反高度约束则淘汰；强制right无解须报错。
+验证须检查整组文字的中心与上下边界、无重叠、70%档位及显式位置生效。
+
+两张及以上科研图优先使用 `multi-image`，不要用 compare 的 html 卡片堆图。
+每图标题、说明按实际文本高度占位，剩余空间给图片；两者可省略，省略后不保留空栏。
+标题22px、说明20px，行高1.35/1.45；不得用缩字、截断文本或裁切图片应付过密内容。
+`auto` 默认开启换序，科学上必须固定左右/步骤关系时用 `manual`。
+自动算法读取原始图片纵横比，并在字体、公式、图片就绪后测量实际文本；采用有界分组搜索，
+优先放大最小图片，其次增大总图片面积，并保留等分网格面积基线。它不推断叙事主次、不裁原图白边。
+手动模式通过行列权重和跨度分配空间，构建期拒绝重叠、越界和无效权重。所有配置仍在 slides.yaml 中。
+图片缺失、文本无法容纳时显式报错；视觉验收等待布局完成。模板修改后运行 `node tests/multi-image.mjs`，
+覆盖四种画布/导航状态及自动、手动、缺图和非法配置。示例与完整 YAML 写法见根 README。
 
 ## 附录 B：对抗测试（重大改动后必须重跑）
 

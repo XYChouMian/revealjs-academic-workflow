@@ -10,7 +10,7 @@ description: >
 
 # academic-presentation · 学术演示文稿生产技能
 
-**版本：v1.7.0（2026-11-16）。** 离线 Mermaid 固定升级为 11.17.2，并保留 npm 来源、完整性与许可证记录。v1.6.1 将 `chapter-overview` 改为一章一行的纵向目录。v1.6.0 新增自动章节总览与 `ending` 正文/附录边界。v1.5.1 的 `decks/starter/` 为唯一功能示例，覆盖全部布局。v1.5.0 的 `deck.chapter_nav: true` 一行启用自动章节导航。v1.4.3 普通内容页统一标题顶部位置，表格伸展仅作用于表格容器。v1.0 骨架与 Reveal.js/MathJax 依赖保持冻结。v1.2 固化内容层级、舒适表格、
+**版本：v1.8.0 预览（2026-11-16）。** `deck.aspect_ratio: "16:9" | "4:3"` 一行切换画布；章节导航改为画布内顶栏，不再压缩 Reveal 视口。四种“比例 × 导航”组合共用同一模板。v1.7.0 将离线 Mermaid 固定升级为 11.17.2。v1.6.1 将 `chapter-overview` 改为一章一行的纵向目录。v1.6.0 新增自动章节总览与 `ending` 正文/附录边界。v1.5.1 的 `decks/starter/` 为唯一功能示例，覆盖全部布局。v1.5.0 的 `deck.chapter_nav: true` 一行启用自动章节导航。v1.4.3 普通内容页统一标题顶部位置，表格伸展仅作用于表格容器。v1.0 骨架与 Reveal.js/MathJax 依赖保持冻结。v1.2 固化内容层级、舒适表格、
 显式图片比例模式与字号/行高自适应；v1.3 根因修复“内容堆上半部、下半部大块留白”（布局类 +
 内容区纵向撑满 + sparse-page 检查）；v1.4 实现“排版免操心”六项（图片自适应、字段 schema 硬校验、
 YAML 转义检查、卡片 detail 公式兼容、cite 碰撞检测、表格模式提示）；v1.4.1 一键构建 bat 与
@@ -22,7 +22,24 @@ custom.css 将其页脚化（与 cite 同基线、右对齐内容边距、去 ve
 **核心原则：固化可靠的生产流程与技术能力，而非固化某一次汇报的内容。**
 学术判断属于内容阶段，确定性检查属于脚本；HTML 是展示容器，不是图形生产工具。
 
+**v1.9.3 三级提醒预览（2026-11-17）**：全部布局共享 content.note/callout/box，
+按弱、中、强依次显示于主体下方；支持字符串或 {label,text}，不影响 Presenter Notes。
+
+**v1.10.0 PDF 导出预览（2026-11-18）**：`一键导出PDF.bat` 将已有 `output/index.html`
+离线导出到 deck 根目录 `presentation.pdf`；不自动构建，固定一张幻灯片一页，并等待公式、
+Mermaid、图片和多图布局完成。导航栏与 Presenter Notes 不进入 PDF。
+
+**v1.9.0 多图预览（2026-11-17）**：新增 `layout: multi-image`，默认 `auto` 按图片比例与文本高度优化空间、允许换序；`manual` 用加权行列与跨度控制。每图 `title/content` 可选，不缩字、不裁图；配置和示例见 README，多图规范见阶段细节附录 A。
+
+**v1.9.1 排版修复预览（2026-11-17）**：分层卡片强制保持 `title > thesis > detail > cue` 字号顺序；视觉检查会把自适应文字导致的层级反转登记为 P1。
+
 ## 何时使用 / 何时不用
+
+**v1.9.5 左侧文字栏预览（2026-11-18）**：逐图 `content_position: left` 与right镜像；共享居中、组合高度约束与70%候选，auto/manual均可显式指定。
+
+**v1.9.4 right组合预览（2026-11-18）**：right下标题与说明整体置右、垂直居中，整组高度不超过实际图片高度；右栏候选新增70%。仅标题时right亦生效，bottom保持原行为。
+
+**v1.9.2 多图对齐预览（2026-11-17）**：多图标题与说明按实际图片居中；逐图 `content_position: bottom|right`，auto 缺省自动选择，manual 缺省下方。评分与显示共用图文几何计算。
 
 - ✅ 科研汇报、开题、组会、论文讲解、调研综合 → Reveal.js 幻灯片
 - ✅ 修复/扩展现有 Reveal.js deck（先找到或重建 deck 目录，不要直接改生成物）
@@ -65,6 +82,7 @@ custom.css 将其页脚化（与 cite 同基线、右对齐内容边距、去 ve
 python src/academic-presentation/build.py <deck>                  # 构建（yaml → html + vendor）
 python src/academic-presentation/validate.py <deck>               # 静态检查（快）
 python src/academic-presentation/validate.py <deck> --visual      # + 浏览器逐页截图与溢出/渲染检查
+node src/academic-presentation/export_pdf.mjs <deck>              # 已有 HTML → <deck>/presentation.pdf
 python src/academic-presentation/build.py checkpoint <deck> <标签>  # 批量修改/公共样式改动前必做
 python src/academic-presentation/build.py restore   <deck> <标签>   # 大范围损坏立即整体回退
 ```
@@ -74,10 +92,10 @@ python src/academic-presentation/build.py restore   <deck> <标签>   # 大范�
 ## slides.yaml 最小 schema
 
 ```yaml
-deck: { title, author, date, chapter_nav: false }  # 可选开关，true 启用自动章节导航
+deck: { title, author, date, aspect_ratio: "16:9", chapter_nav: false }  # 比例可选 16:9/4:3
 slides:
   - slide_id: s01-cover            # 唯一、稳定
-    layout: cover                  # 另含 section/bullets/image/image-text/compare/table/roadmap/conclusion/chapter-overview/ending/html
+    layout: cover                  # 另含 section/bullets/image/image-text/multi-image/compare/table/roadmap/conclusion/chapter-overview/ending/html
     kicker: 第一部分 · 问题与任务    # 可选眉题
     title: 页标题
     content: { … }                 # 各 layout 字段见 references/presentation-workflow.md 附录A

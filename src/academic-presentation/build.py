@@ -15,10 +15,12 @@ deck 目录契约：
   <deck>/content/deck.css       可选，deck 级样式追加
   <deck>/assets/                图片与独立图形资源（构建时自动复制进 output/）
   <deck>/一键构建.bat            双击构建入口（构建时若缺失自动放置模板，不覆盖已有）
+  <deck>/一键导出PDF.bat         导出已有 output/index.html（不触发构建）
   <deck>/output/                全部生成物（可随时删除重建）
 """
 import html as html_lib
 import json
+import math
 import re
 import shutil
 import sys
@@ -31,12 +33,13 @@ TEMPLATE_DIR = REPO_ROOT / "templates" / "academic-reveal"
 TEMPLATE = TEMPLATE_DIR / "reveal-base.html"
 CUSTOM_CSS = TEMPLATE_DIR / "custom.css"
 BAT_TEMPLATE = TEMPLATE_DIR / "一键构建.bat"
+PDF_BAT_TEMPLATE = TEMPLATE_DIR / "一键导出PDF.bat"
 VENDOR = REPO_ROOT / "vendor"
 
 KNOWN_LAYOUTS = {
     "cover", "section", "bullets", "image", "image-text",
     "compare", "table", "roadmap", "conclusion", "chapter-overview",
-    "ending", "html",
+    "ending", "html", "multi-image",
 }
 IMAGE_MODES = {"side", "side-dominant", "wide-hero"}
 TABLE_MODES = {"standard", "spacious", "compact"}
@@ -51,6 +54,7 @@ LAYOUT_FIELDS = {
     "bullets": {"lead", "bullets", "callout", "box", "mermaid"},
     "image": {"src", "caption", "alt", "white_background", "image", "bullets", "mermaid"},
     "image-text": {"image", "side", "image_mode", "bullets", "callout", "mermaid"},
+    "multi-image": {"mode", "images", "columns", "rows", "gap", "callout"},
     "compare": {"cols", "card_mode", "callout", "fit_text", "mermaid"},
     "table": {"headers", "rows", "highlight_row", "table_mode", "dense", "note", "mermaid"},
     "roadmap": {"steps", "card_mode", "fit_text", "mermaid", "note"},
@@ -58,6 +62,33 @@ LAYOUT_FIELDS = {
     "chapter-overview": set(),
     "ending": {"subtitle", "prompt", "meta"},
 }
+
+
+ALERT_FIELDS = {"note", "callout", "box"}
+for _fields in LAYOUT_FIELDS.values():
+    _fields.update(ALERT_FIELDS)
+
+
+def alerts_html(content):
+    """All layouts share the same ordered, non-shrinking reminder region."""
+    parts = []
+    for kind in ("note", "callout", "box"):
+        value = content.get(kind)
+        if value is None:
+            continue
+        if isinstance(value, str):
+            value = {"text": value}
+        if not isinstance(value, dict) or not isinstance(value.get("text"), str):
+            raise ValueError(f"content.{kind} 需为字符串或 {{label, text}}，text 必须为字符串")
+        unknown = set(value) - {"label", "text", "style"}
+        if unknown:
+            raise ValueError(f"content.{kind} 不支持字段: {unknown}")
+        if not value["text"].strip():
+            continue
+        label = f'<strong class="alert-label">{e(value["label"])}</strong> ' if value.get("label") else ""
+        extra = " alert-main" if kind == "callout" and value.get("style") == "main" else ""
+        parts.append(f'<div class="slide-alert alert-{kind}{extra}">{label}{e(value["text"])}</div>')
+    return '<div class="slide-alerts">\n' + "\n".join(parts) + "\n</div>\n" if parts else ""
 
 
 def e(text):
@@ -141,7 +172,7 @@ def mermaid_block(content):
     m = (content or {}).get("mermaid", "").strip()
     if not m:
         return ""
-    return f'  <pre class="mermaid">{m}</pre>\n'
+    return f'  <div class="mermaid tex2jax_ignore">{m}</div>\n'
 
 
 # ---------------- 各布局渲染器：输入 content 字典，输出 section 内部 HTML ----------------
@@ -179,15 +210,6 @@ def r_bullets(slide):
     if c.get("lead"):
         parts.append(f'  <p class="small">{e(c["lead"])}</p>\n')
     parts.append(ul(c.get("bullets", [])) + "\n")
-    call = c.get("callout")
-    if call:
-        style = "q main" if call.get("style") == "main" else "q"
-        label = f'<span class="lab">{e(call.get("label",""))} </span>' if call.get("label") else ""
-        parts.append(f'  <div class="{style}">{label}{e(call.get("text",""))}</div>\n')
-    box = c.get("box")
-    if box:
-        cls = "note-box" if box.get("style", "note") == "note" else "tbd-box"
-        parts.append(f'  <div class="{cls} small" style="margin-top:10px;">{e(box.get("text",""))}</div>\n')
     parts.append(mermaid_block(c))
     return "".join(parts)
 
@@ -223,16 +245,94 @@ def r_image_text(slide):
     side = "image-text" if c.get("side", "left") == "left" else "text-image"
     img_col = f'<div class="col image-visual">{_figure(c.get("image", {}))}</div>\n'
     text_col = "<div class=\"col small image-copy\">\n" + ul(c.get("bullets", [])) + "\n"
-    if c.get("callout"):
-        call = c["callout"]
-        style = "q main" if call.get("style") == "main" else "q"
-        text_col += f'<div class="{style}">{e(call.get("text",""))}</div>\n'
     text_col += "</div>\n"
     cols = img_col + text_col if mode == "wide-hero" or side == "image-text" else text_col + img_col
     parts = [kicker_html(slide), f"  <h2>{e(slide.get('title',''))}</h2>\n",
              f'  <div class="cols image-mode-{mode} {side}" style="align-items:center;">\n{cols}  </div>\n']
     parts.append(mermaid_block(c))
     return "".join(parts)
+
+
+def check_multi_image(c):
+    """Shared build/static-validation schema; manual coordinates never silently disappear."""
+    mode = c.get("mode", "auto")
+    if mode not in {"auto", "manual"}:
+        raise ValueError("multi-image.mode 必须是 auto 或 manual")
+    def positive(v):
+        return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) and v > 0
+    gap = c.get("gap", 16)
+    if not (positive(gap) or type(gap) in (int, float) and gap == 0):
+        raise ValueError("multi-image.gap 必须是有限非负数")
+    images = c.get("images")
+    if not isinstance(images, list) or len(images) < 2:
+        raise ValueError("multi-image.images 需要至少两张图片")
+    if mode == "manual":
+        for key in ("columns", "rows"):
+            values = c.get(key)
+            if not isinstance(values, list) or not values or not all(positive(v) for v in values):
+                raise ValueError(f"multi-image.{key} 需要非空正数权重列表")
+    elif "columns" in c or "rows" in c:
+        raise ValueError("multi-image 的 columns/rows 仅适用于 manual 模式")
+    occupied = []
+    for i, item in enumerate(images, 1):
+        if not isinstance(item, dict):
+            raise ValueError(f"multi-image.images[{i}] 必须是字典")
+        allowed = {"src", "title", "content", "content_position", "alt", "white_background", "row", "column", "rowspan", "colspan"}
+        if set(item) - allowed:
+            raise ValueError(f"multi-image.images[{i}] 未知字段: {set(item) - allowed}")
+        if not isinstance(item.get("src"), str) or not item["src"].strip():
+            raise ValueError(f"multi-image.images[{i}] 缺少 src")
+        for key in ("title", "alt"):
+            if key in item and not isinstance(item[key], str):
+                raise ValueError(f"multi-image.images[{i}].{key} 需要字符串")
+        text = item.get("content", "")
+        if "content_position" in item and item["content_position"] not in ("bottom", "right", "left"):
+            raise ValueError(f"multi-image.images[{i}].content_position 必须是 bottom、right 或 left")
+        if not isinstance(text, str) and not (isinstance(text, list) and all(isinstance(v, str) for v in text)):
+            raise ValueError(f"multi-image.images[{i}].content 需要字符串或字符串列表")
+        if item.get("white_background", "original") not in {"original", "blend"}:
+            raise ValueError(f"multi-image.images[{i}].white_background 必须是 original 或 blend")
+        coords = ("row", "column", "rowspan", "colspan")
+        if mode == "auto" and any(k in item for k in coords):
+            raise ValueError("multi-image 的位置字段仅适用于 manual 模式")
+        if mode == "manual":
+            r, col, rs, cs = (item.get(k, 1 if k.endswith("span") else None) for k in coords)
+            if any(type(v) is not int or v < 1 for v in (r, col, rs, cs)):
+                raise ValueError(f"multi-image.images[{i}] 行列与跨度必须是从 1 开始的整数")
+            if r + rs - 1 > len(c["rows"]) or col + cs - 1 > len(c["columns"]):
+                raise ValueError(f"multi-image.images[{i}] 网格位置越界")
+            rect = (r, col, r + rs, col + cs)
+            if any(r < b[2] and rect[2] > b[0] and col < b[3] and rect[3] > b[1] for b in occupied):
+                raise ValueError(f"multi-image.images[{i}] 网格位置重叠")
+            occupied.append(rect)
+
+
+def r_multi_image(slide):
+    c = slide.get("content", {})
+    check_multi_image(c)
+    mode = c.get("mode", "auto")
+    style = f'--multi-gap:{c.get("gap", 16)}px;'
+    if mode == "manual":
+        style += "grid-template-columns:" + " ".join(f"minmax(0,{v}fr)" for v in c["columns"]) + ";"
+        style += "grid-template-rows:" + " ".join(f"minmax(0,{v}fr)" for v in c["rows"]) + ";"
+    parts = [kicker_html(slide), f'<h2>{e(slide.get("title", ""))}</h2>',
+             f'<div class="multi-images" data-mode="{mode}" data-multi-state="pending" style="{style}">']
+    for index, item in enumerate(c["images"]):
+        pos = ""
+        if mode == "manual":
+            pos = f' style="grid-row:{item["row"]}/span {item.get("rowspan", 1)};grid-column:{item["column"]}/span {item.get("colspan", 1)};"'
+        placement = item.get("content_position", "auto" if mode == "auto" else "bottom")
+        parts.append(f'<div class="multi-panel" data-image-index="{index}" data-content-position="{placement}"{pos}>')
+        if item.get("title"):
+            parts.append(f'<h3 class="multi-title">{e(item["title"])}</h3>')
+        parts.append(_figure(item))
+        text = item.get("content")
+        if text:
+            body = ul(text) if isinstance(text, list) else e(text)
+            parts.append(f'<div class="multi-copy">{body}</div>')
+        parts.append('</div>')
+    parts.append('</div>')
+    return "\n".join(parts) + "\n"
 
 
 def r_compare(slide):
@@ -254,10 +354,6 @@ def r_compare(slide):
                 parts.append(f"  {line}\n")
         parts.append("    </div>\n")
     parts.append("  </div>\n")
-    if c.get("callout"):
-        call = c["callout"]
-        style = "q main" if call.get("style") == "main" else "q"
-        parts.append(f'  <div class="{style}">{e(call.get("text",""))}</div>\n')
     parts.append(mermaid_block(c))
     return "".join(parts)
 
@@ -279,8 +375,6 @@ def r_table(slide):
     parts.append("      </tbody>\n    </table>\n")
     if wrap:
         parts.append("  </div>\n")
-    if c.get("note"):
-        parts.append(f'  <p class="small" style="color:var(--sub);">{e(c["note"])}</p>\n')
     parts.append(mermaid_block(c))
     return "".join(parts)
 
@@ -304,8 +398,6 @@ def r_roadmap(slide):
             parts.append("    </div>\n")
         parts.append("  </div>\n")
     parts.append(mermaid_block(c))
-    if c.get("note"):
-        parts.append(f'  <p class="small" style="color:var(--sub);">{e(c["note"])}</p>\n')
     return "".join(parts)
 
 
@@ -331,10 +423,6 @@ def r_conclusion(slide):
             parts.append("  </div>\n")
     if mode == "cards":
         parts.append("  </div>\n")
-    if c.get("callout"):
-        call = c["callout"]
-        style = "q main" if call.get("style") == "main" else "q"
-        parts.append(f'  <div class="{style}">{e(call.get("text",""))}</div>\n')
     return "".join(parts)
 
 
@@ -387,6 +475,7 @@ RENDERERS = {
     "image": r_image, "image-text": r_image_text, "compare": r_compare,
     "table": r_table, "roadmap": r_roadmap, "conclusion": r_conclusion,
     "ending": r_ending,
+    "multi-image": r_multi_image,
     "html": r_html,
 }
 
@@ -431,8 +520,9 @@ def render_slide(slide, idx, chapters):
         cls += " ending-slide"
     attrs += f' class="{cls}"'
     body = r_chapter_overview(slide, chapters) if layout == "chapter-overview" else RENDERERS[layout](slide)
+    body += alerts_html(content)
     # 供视觉检查判断"该页应出现公式渲染产物"（排除 mermaid 源码块，其内容由 MathJax skip）
-    probe = re.sub(r"<pre class=\"mermaid\">.*?</pre>", "", body, flags=re.S)
+    probe = re.sub(r'<(?:pre|div) class="mermaid(?: tex2jax_ignore)?">.*?</(?:pre|div)>', "", body, flags=re.S)
     if "$" in probe or "\\(" in probe or "\\[" in probe:
         attrs += ' data-math="1"'
     return f'<section{attrs}>\n{sources_comment(slide)}{body}{cite_html(slide)}{notes_html(slide)}</section>\n'
@@ -456,6 +546,12 @@ def build(deck_dir):
     chapter_nav = deck_meta.get("chapter_nav", False)
     if not isinstance(chapter_nav, bool):
         sys.exit("[build] deck.chapter_nav 必须是 true 或 false")
+    aspect_ratio = deck_meta.get("aspect_ratio", "16:9")
+    aspect_sizes = {"16:9": (1280, 720), "4:3": (960, 720)}
+    if aspect_ratio not in aspect_sizes:
+        sys.exit("[build] deck.aspect_ratio 必须是 '16:9' 或 '4:3'")
+    slide_width, slide_height = aspect_sizes[aspect_ratio]
+    aspect_class = "ratio-16-9" if aspect_ratio == "16:9" else "ratio-4-3"
     slides = data.get("slides") or []
     if not slides:
         sys.exit("[build] slides.yaml 中没有任何页面")
@@ -500,6 +596,9 @@ def build(deck_dir):
     html = (template
             .replace("{{DECK_TITLE}}", e(deck_meta.get("title", "学术汇报")))
             .replace("{{DECK_CSS_TAG}}", deck_css_tag)
+            .replace("{{ASPECT_CLASS}}", aspect_class)
+            .replace("{{SLIDE_WIDTH}}", str(slide_width))
+            .replace("{{SLIDE_HEIGHT}}", str(slide_height))
             .replace("{{CHAPTER_DATA}}", chapter_data)
             .replace("{{SLIDES}}", slides_html))
 
@@ -511,6 +610,7 @@ def build(deck_dir):
             shutil.rmtree(dst)
         shutil.copytree(VENDOR, dst)
     (out_dir / "custom.css").write_text(CUSTOM_CSS.read_text(encoding="utf-8"), encoding="utf-8")
+    shutil.copy2(TEMPLATE_DIR / "multi-image.js", out_dir / "multi-image.js")
     if (deck_dir / "content" / "deck.css").exists():
         shutil.copy2(deck_dir / "content" / "deck.css", out_dir / "deck.css")
     # deck 的图件目录整体复制进 output（与 vendor 同策略：清理重建，避免改名后残留孤儿文件）。
@@ -526,8 +626,14 @@ def build(deck_dir):
     if BAT_TEMPLATE.exists() and not bat_dst.exists():
         shutil.copy2(BAT_TEMPLATE, bat_dst)
         print("[build] 已放置 一键构建.bat（双击 = 编译 + 浏览器放映；成功自动关窗，出错停窗）")
+    pdf_bat_dst = deck_dir / "一键导出PDF.bat"
+    if PDF_BAT_TEMPLATE.exists() and not pdf_bat_dst.exists():
+        shutil.copy2(PDF_BAT_TEMPLATE, pdf_bat_dst)
+        print("[build] 已放置 一键导出PDF.bat（导出已有 HTML，不自动重新构建）")
     (out_dir / "build-manifest.json").write_text(json.dumps(
         {"deck": deck_meta.get("title", ""), "slides": len(slides),
+         "aspect_ratio": aspect_ratio, "slide_width": slide_width, "slide_height": slide_height,
+         "chapter_nav": chapter_nav,
          "slide_ids": [s["slide_id"] for s in slides]}, ensure_ascii=False, indent=2),
         encoding="utf-8")
     print(f"[build] 完成: {out_dir / 'index.html'}（{len(slides)} 页，vendor 已就位）")

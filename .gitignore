@@ -25,6 +25,7 @@ test-results/
 backups/
 decks/*/output/
 decks/*/.checkpoints/
+decks/*/presentation.pdf
 
 # Editors and operating systems
 .vscode/

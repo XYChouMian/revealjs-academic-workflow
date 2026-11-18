@@ -1,6 +1,7 @@
 deck:
   title: Reveal.js 功能示例
   author: Your Name
+  aspect_ratio: "16:9"
   chapter_nav: true
 
 slides:
@@ -85,10 +86,12 @@ slides:
         - [行间留白, 自动利用剩余高度]
         - [重点行, 浅色突出]
       highlight_row: 2
-      note: 短表使用 spacious；不通过缩字填满页面。
+      note: 补充说明：短表优先使用 spacious。
+      callout: {label: 关键认识, text: 表格行高自动利用剩余空间。}
+      box: {label: 重要限制, text: 不通过缩字或隐藏内容来通过验收。}
     cite: *cite
     sources: *sources
-    notes: 舒适表格展示标题对齐、自动行高分配、highlight_row 与表下注释。眉题不会参与表格容器的伸展。
+    notes: 舒适表格展示标题对齐、自动行高分配、highlight_row 和通用三级提醒。note 为弱提示，callout 为关键认识，box 为重要限制；三者自然高度预留后，表格利用剩余空间。眉题不会参与表格容器的伸展。
 
   - slide_id: s06-standard
     layout: table
@@ -201,6 +204,56 @@ slides:
     cite: *cite
     sources: *sources
     notes: 极宽图使用 wide-hero。图片占主区域，下方横向结论带；所有模式均 object-fit contain，不猜测叙事结构。
+
+  - slide_id: s13a-multi-auto
+    layout: multi-image
+    title: 多图自动：按比例分配图片空间
+    kicker: multi-image · auto
+    content:
+      images:
+        - src: assets/diagrams/square.svg
+          title: 近方图
+          content: 标题和说明跟随图片，顺序可自动调整。
+        - src: assets/diagrams/wide.svg
+          title: 宽图
+          content: 留足横向宽度，看清机制链条。
+          content_position: bottom
+        - src: assets/diagrams/white-background.jpg
+          white_background: blend
+    cite: academic-presentation · 自绘示意与已有截图，非实验数据
+    sources: [starter/assets-manifest.md]
+    notes: 多图自动模式允许换序，综合图片纵横比和文字高度比较横向、纵向及混合排布。近方图未指定说明位置，自动比较下方与右侧；宽图显式限定说明在下方。标题与说明按实际图片居中。第三图省略标题和说明，空间归还图片。JPG 展示原有白底融合能力，原图不变。
+
+  - slide_id: s13b-multi-manual
+    layout: multi-image
+    title: 多图手动：一大两小，位置与比例可控
+    kicker: multi-image · manual
+    content:
+      mode: manual
+      columns: [3, 2]
+      rows: [1, 2]
+      gap: 16
+      images:
+        - src: assets/diagrams/square.svg
+          title: 左侧主图
+          content: 跨两行，占三份列宽。
+          row: 1
+          column: 1
+          rowspan: 2
+        - src: assets/diagrams/wide.svg
+          row: 1
+          column: 2
+        - src: assets/diagrams/white-background.png
+          title: 右下辅助图
+          content: 可选短说明，按实际高度占位。
+          content_position: right
+          white_background: blend
+          row: 2
+          column: 2
+      callout: {text: 修改列宽、行高权重与跨行跨列，即可调整图片区域。}
+    cite: academic-presentation · 自绘示意与已有截图，非实验数据
+    sources: [starter/assets-manifest.md]
+    notes: 手动模式保持 YAML 指定的位置，columns 与 rows 是相对权重，row/column 从 1 开始。右下图使用 right，标题与说明一起放到图片右边，整组文字垂直居中，组合高度不超过图片高度；右栏候选可达图块宽度的70%。左侧主图未指定位置，缺省上下排列。图像保持原比例，不裁切；右上省略标题说明。
 
   - slide_id: s14-html
     layout: html

@@ -27,16 +27,19 @@ function build(name, setting, pages = slides) {
   const result = spawnSync('python', [path.join(root, 'src/academic-presentation/build.py'), dir], { encoding: 'utf8' });
   return { dir, result, url: pathToFileURL(path.join(dir, 'output/index.html')).href };
 }
-const on = build('on', { chapter_nav: true });
-const off = build('off', { chapter_nav: false });
+const on = build('on', { aspect_ratio: '16:9', chapter_nav: true });
+const off = build('off', { aspect_ratio: '16:9', chapter_nav: false });
+const on43 = build('on-4-3', { aspect_ratio: '4:3', chapter_nav: true });
+const off43 = build('off-4-3', { aspect_ratio: '4:3', chapter_nav: false });
 const absent = build('absent', {});
 const noSections = build('no-sections', { chapter_nav: true }, [base('cover', 'cover', '封面'), base('plain', 'bullets', '内容')]);
 const invalidFlag = build('invalid-flag', { chapter_nav: 'true' });
+const invalidRatio = build('invalid-ratio', { aspect_ratio: 'wide' });
 const twoEndings = build('two-endings', {}, [...slides, base('ending-2', 'ending', '再次结束')]);
 const emptyOverview = build('empty-overview', {}, [base('cover', 'cover', '封面'), base('overview', 'chapter-overview', '结构')]);
 const lateOverview = build('late-overview', {}, [base('chapter', 'section', '正文'), base('ending', 'ending', '结束'), base('overview', 'chapter-overview', '结构')]);
-for (const fixture of [on, off, absent, noSections]) assert.equal(fixture.result.status, 0, fixture.result.stderr);
-for (const fixture of [invalidFlag, twoEndings, emptyOverview, lateOverview]) assert.notEqual(fixture.result.status, 0);
+for (const fixture of [on, off, on43, off43, absent, noSections]) assert.equal(fixture.result.status, 0, fixture.result.stderr);
+for (const fixture of [invalidFlag, invalidRatio, twoEndings, emptyOverview, lateOverview]) assert.notEqual(fixture.result.status, 0);
 
 const indexOf = id => slides.findIndex(s => s.slide_id === id);
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
@@ -67,10 +70,12 @@ try {
     const slide = __deck.getCurrentSlide();
     return { title: (slide.querySelector('h2').getBoundingClientRect().top - slide.getBoundingClientRect().top) / __deck.getScale(),
       nav: document.querySelector('.chapter-nav').getBoundingClientRect().bottom,
-      stage: document.querySelector('.reveal').getBoundingClientRect().top };
+      stage: document.querySelector('.reveal').getBoundingClientRect().top,
+      width: slide.getBoundingClientRect().width };
   });
-  assert.ok(Math.abs(geometry.title - 74) < 1);
-  assert.ok(geometry.stage >= geometry.nav, JSON.stringify(geometry));
+  assert.ok(Math.abs(geometry.title - 94) < 1, JSON.stringify(geometry));
+  assert.ok(Math.abs(geometry.stage) < 1, JSON.stringify(geometry));
+  assert.ok(Math.abs(geometry.width - 1280) < 1, JSON.stringify(geometry));
 
   await page.evaluate(idx => __deck.slide(idx), indexOf('content-7'));
   assert.equal(await page.locator('[aria-current]').textContent(), slides[indexOf('chapter-7')].title);
@@ -91,18 +96,39 @@ try {
   await page.evaluate(idx => __deck.slide(idx), indexOf('content-1'));
   const withKicker = await page.evaluate(() => {
     const slide = __deck.getCurrentSlide();
-    return (slide.querySelector('h2').getBoundingClientRect().top - slide.getBoundingClientRect().top) / __deck.getScale();
+    const slideBox = slide.getBoundingClientRect();
+    return {
+      title: (slide.querySelector('h2').getBoundingClientRect().top - slideBox.top) / __deck.getScale(),
+      kickerTop: slide.querySelector('.kicker').getBoundingClientRect().top,
+      navBottom: document.querySelector('.chapter-nav').getBoundingClientRect().bottom
+    };
   });
-  assert.ok(Math.abs(withKicker - geometry.title) < 1);
+  assert.ok(Math.abs(withKicker.title - geometry.title) < 1);
+  assert.ok(withKicker.kickerTop >= withKicker.navBottom, JSON.stringify(withKicker));
+
+  for (const [fixture, width, hasNav] of [[off, 1280, false], [on43, 960, true], [off43, 960, false]]) {
+    await page.setViewportSize({ width, height: 720 });
+    await load(fixture.url);
+    await page.evaluate(idx => __deck.slide(idx), indexOf('content-0'));
+    const mode = await page.evaluate(() => ({
+      width: __deck.getCurrentSlide().getBoundingClientRect().width,
+      height: __deck.getCurrentSlide().getBoundingClientRect().height,
+      hasNav: document.body.classList.contains('has-chapter-nav')
+    }));
+    assert.ok(Math.abs(mode.width - width) < 1, JSON.stringify(mode));
+    assert.ok(Math.abs(mode.height - 720) < 1, JSON.stringify(mode));
+    assert.equal(mode.hasNav, hasNav);
+  }
   await page.setViewportSize({ width: 800, height: 600 });
+  await load(on.url);
   assert.ok(await page.locator('.chapter-track').evaluate(el => el.scrollWidth > el.clientWidth));
-  for (const fixture of [off, absent, noSections]) {
+  for (const fixture of [off, off43, absent, noSections]) {
     await load(fixture.url);
     assert.equal(await page.locator('.chapter-nav').count(), 0);
     assert.equal(await page.locator('body').evaluate(el => el.classList.contains('has-chapter-nav')), false);
   }
   assert.deepEqual(errors, []);
-  console.log('PASS: 导航/总览/ending 边界/附录排除、点击、直达、长标题、缩放与标题对齐');
+  console.log('PASS: 16:9/4:3 × 导航开关、总览、ending 边界、点击与标题对齐');
 } finally {
   await browser.close();
 }

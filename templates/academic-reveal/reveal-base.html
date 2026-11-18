@@ -17,7 +17,7 @@
 <script>
 /* MathJax 3 配置：必须在 tex-mml-svg.js 加载前就位。
    单 $ 行内公式已启用；pre/code 与 .tex2jax_ignore 不参与排版
-   （Mermaid 源码固定放在 <pre class="mermaid"> 中，避免 $ 被公式引擎吃掉）。
+   （Mermaid 源码使用原生 div 容器并标记 tex2jax_ignore，避免 $ 被公式引擎吃掉）。
    实践版结论：Reveal 官方 math 插件默认走 MathJax2 路径（调用 MathJax 3 中
    不存在的 MathJax.Hub），故本骨架直接用 MathJax 3 自启动整页排版，不加载该插件。 */
 window.MathJax = {
@@ -37,7 +37,7 @@ window.MathJax = {
 .reveal-viewport{ background:#fcfbf6; }
 </style>
 </head>
-<body>
+<body class="{{ASPECT_CLASS}}">
 <script id="chapter-data" type="application/json">{{CHAPTER_DATA}}</script>
 <div class="reveal"><div class="slides">
 {{SLIDES}}
@@ -47,6 +47,7 @@ window.MathJax = {
 <script src="vendor/reveal/plugin/notes/notes.js"></script>
 <script src="vendor/mermaid/mermaid.min.js"></script>
 <script src="vendor/mathjax/tex-mml-svg.js" defer></script>
+<script src="multi-image.js"></script>
 <script>
 (function(){
   /* ---- Mermaid：手动渲染，避免隐藏页零尺寸（实践版验证方案） ---- */
@@ -54,19 +55,10 @@ window.MathJax = {
     mermaid.initialize({
       startOnLoad: false,
       securityLevel: 'loose',
-      theme: 'base',
+      theme: 'neutral',
       themeVariables: {
-        fontFamily: '"Times New Roman","STSong","SimSun","Songti SC","Noto Serif CJK SC",serif',
-        fontSize: '19px',
-        primaryColor: '#eef2f7',
-        primaryTextColor: '#1c1c1c',
-        primaryBorderColor: '#7a8aa0',
-        lineColor: '#4a4a4a',
-        tertiaryColor: '#faf9f4',
-        clusterBkg: '#faf9f4',
-        clusterBorder: '#c9c4b6'
-      },
-      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', nodeSpacing: 34, rankSpacing: 40, padding: 10 }
+        fontFamily: '"Times New Roman","STSong","SimSun","Songti SC","Noto Serif CJK SC",serif'
+      }
     });
   }
   var mmCount = 0;
@@ -93,7 +85,7 @@ window.MathJax = {
     return chain;
   }
 
-  /* ---- Reveal 初始化：固定 1280×720，内容边界由此确定 ---- */
+  /* ---- Reveal 初始化：画布比例由 slides.yaml 的 deck.aspect_ratio 决定 ---- */
   var deck = new Reveal({
     hash: true,
     history: true,
@@ -105,9 +97,9 @@ window.MathJax = {
     controlsBackArrows: 'hidden',
     transition: 'fade',
     backgroundTransition: 'none',
-    width: 1280,
-    height: 720,
-    margin: 0.03,
+    width: {{SLIDE_WIDTH}},
+    height: {{SLIDE_HEIGHT}},
+    margin: 0,
     minScale: 0.2,
     maxScale: 2.0,
     center: false,
@@ -116,7 +108,7 @@ window.MathJax = {
     overview: true,
     plugins: [ RevealNotes ]
   });
-  /* 章节由构建器从 section 页提取；导航不占用幻灯片内部空间。 */
+  /* 章节由构建器从 section 页提取；导航覆盖画布顶部预留带，不改变页面比例。 */
   var chapterInfo = JSON.parse(document.getElementById('chapter-data').textContent);
   var chapters = chapterInfo.chapters || [];
   var mainEnd = Number.isInteger(chapterInfo.mainEnd) ? chapterInfo.mainEnd : Infinity;
@@ -186,7 +178,7 @@ window.MathJax = {
   }
   function ready(){
     syncChapter();
-    var kick = function(){ deck.layout(); fitDeclaredText(); renderMermaidIn(deck.getCurrentSlide()); };
+    var kick = function(){ deck.layout(); fitDeclaredText(); renderMermaidIn(deck.getCurrentSlide()); layoutMultiImages(deck.getCurrentSlide()); };
     if (window.MathJax && MathJax.startup && MathJax.startup.promise) {
       MathJax.startup.promise.then(kick);
     } else { kick(); }
@@ -223,8 +215,8 @@ window.MathJax = {
       set(best);
     });
   }
-  deck.on('slidechanged', function(e){ fitDeclaredText(); renderMermaidIn(e.currentSlide); });
-  deck.on('resize', fitDeclaredText);
+  deck.on('slidechanged', function(e){ fitDeclaredText(); renderMermaidIn(e.currentSlide); layoutMultiImages(e.currentSlide); });
+  deck.on('resize', function(){ fitDeclaredText(); layoutMultiImages(deck.getCurrentSlide()); });
   deck.on('overviewshown', function(){ renderMermaidIn(deck.getCurrentSlide()); });
 })();
 </script>

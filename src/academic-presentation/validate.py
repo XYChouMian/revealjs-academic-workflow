@@ -18,6 +18,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 import yaml
+from build import check_multi_image
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 NO_CITE_OK = {"cover", "section", "chapter-overview", "ending"}
@@ -104,6 +105,8 @@ def check_yaml(data, D):
     deck = data.get("deck") or {}
     if not isinstance(deck.get("chapter_nav", False), bool):
         D.add("P1", "yaml-chapter-nav", "deck.chapter_nav 必须是 true 或 false")
+    if deck.get("aspect_ratio", "16:9") not in {"16:9", "4:3"}:
+        D.add("P1", "yaml-aspect-ratio", "deck.aspect_ratio 必须是 '16:9' 或 '4:3'")
     if not deck.get("title"):
         D.add("P1", "yaml-deck-title", "deck.title 缺失")
     slides = data.get("slides") or []
@@ -126,6 +129,11 @@ def check_yaml(data, D):
     for i, s in enumerate(slides):
         sid = s.get("slide_id") or f"<第{i+1}页缺 slide_id>"
         content = s.get("content") or {}
+        if s.get("layout") == "multi-image":
+            try:
+                check_multi_image(content)
+            except (ValueError, TypeError) as ex:
+                D.add("P1", "yaml-multi-image", str(ex), sid)
         if sid in seen:
             D.add("P0", "yaml-dup-id", f"slide_id 重复: {sid}", sid)
         seen[sid] = True
@@ -209,7 +217,7 @@ def check_math_balance(sections, D):
 
 
 def check_mermaid(html_text, sections, D):
-    blocks = re.findall(r'<pre class="mermaid">(.*?)</pre>', html_text, re.S)
+    blocks = re.findall(r'<(?:pre|div) class="mermaid(?: tex2jax_ignore)?">(.*?)</(?:pre|div)>', html_text, re.S)
     for i, b in enumerate(blocks):
         if not b.strip():
             D.add("P1", "mermaid-empty", f"第 {i+1} 个 mermaid 块为空")
@@ -393,6 +401,15 @@ def run_visual(deck_dir, D):
             D.add("P1", "mermaid-not-rendered", "存在未成功渲染的 Mermaid 图", sid)
         if pg.get("mermaid_error"):
             D.add("P0", "mermaid-error", f"Mermaid 渲染报错: {pg['mermaid_error'][:200]}", sid)
+        for clip in pg.get("mermaid_label_clipping", []):
+            D.add("P1", "mermaid-label-clipping",
+                  f"Mermaid 节点文字被文本框裁切：{clip.get('text', '')!r}"
+                  f"（横向 {clip.get('horizontal', 0):.0f}px，纵向 {clip.get('vertical', 0):.0f}px）", sid)
+        for item in pg.get("hierarchy_font_order", []):
+            D.add("P1", "hierarchy-font-order",
+                  f"分层卡片字号顺序错误：{item.get('label', '')!r} "
+                  f"title {item.get('title_size', 0):.0f}px > thesis {item.get('thesis_size', 0):.0f}px > "
+                  f"detail {item.get('detail_size', 0):.0f}px 未成立", sid)
         if pg.get("mathjax_expected") and not pg.get("mathjax_any"):
             D.add("P1", "mathjax-not-rendered", "页面含公式但未见 MathJax 渲染产物", sid)
         if pg.get("mathjax_error"):

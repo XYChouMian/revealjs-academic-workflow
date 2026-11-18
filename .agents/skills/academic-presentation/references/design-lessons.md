@@ -32,10 +32,13 @@
 2. **Mermaid 隐藏页零尺寸**：`startOnLoad:false` 手动渲染，Reveal `slidechanged` 时
    才渲染当前页；渲染后去掉 svg 的 height 属性。失败的图显示红色错误框而非静默失败
    （visual 检查会抓 `Mermaid render failed`）。
-3. **Mermaid 标签被裁剪**：mermaid 沙箱按 `line-height:1em` 测量标签，渲染态继承
-   `.reveal` 的大行高会被 foreignObject 裁掉 → `.mermaid foreignObject div/span{line-height:1!important}`。
-4. **公式与 Mermaid 源码冲突**：Mermaid 源码固定放 `pre.mermaid`，MathJax
-   `skipHtmlTags` 含 pre/code，互不干扰。
+3. **Mermaid 标签被裁剪**：Mermaid 11 的 HTML 标签新增 `<p>`；若继承 `.reveal p` 的
+   23px/1.5，实际显示会大于 Mermaid 按默认主题测得的节点框。不得另设 Mermaid 字体或字号；仅让
+   `foreignObject p` 继承 Mermaid 自己生成的样式并清除段落 margin。视觉检查同时比较 `<p>` 与其
+   `foreignObject` 边界，内部裁切按 P1 报告。
+4. **公式与 Mermaid 源码冲突**：Mermaid 源码放入原生 `.mermaid` div，并添加
+   `tex2jax_ignore`；MathJax 通过 `ignoreHtmlClass` 跳过，既互不干扰，也避免 Reveal 给 `<pre>`
+   自动添加代码块白底、宽度与阴影。
 5. **离线字体**：white.css 的 `@import source-sans-pro` 已从 vendored 副本移除
    （中文衬线由 custom.css 统一指定）。同样注意：任何 vendored CSS 的外链 @import 都是
    离线断点。
@@ -44,8 +47,8 @@
    `.reveal .slides section.cover{display:flex!important}`。
 7. **底部引用脚注安全区**：section 底部 padding 必须 ≥ cite 脚注区高度
    （现 58px）；否则满页内容的底边会压住引用行（2026-10-21 实测发生并修复）。
-8. **自动验收基准**：1280×720 固定画幅 + playwright-core 驱动系统 Chrome/Edge
-   （不下载浏览器二进制）；元素越界按缩放比例给容差，只报最外层越界元素。
+8. **自动验收基准**：16:9 使用 1280×720、4:3 使用 960×720；playwright-core 驱动系统 Chrome/Edge
+   （不下载浏览器二进制）。视觉检查从构建清单读取原生画布尺寸，元素越界按缩放比例给容差，只报最外层越界元素。
 9. **YAML 反斜杠转义**（2026-10-21 两次踩坑；2026-10-25 第三次，补全规则）：三种写法只有一种是陷阱——
    **首选不加引号**（`标注 $\tau_\sigma$`，单反斜杠原样保留）；**单引号 `'...'` 同样安全**；
    **双引号 `"..."` 内 `\` 是转义符**：`\s` 等非法转义直接解析报错（好情况），而 `\t`、`\n`、`\L`、
@@ -64,8 +67,17 @@
 13. **字号与行距是同一个可读性问题**（2026-10-22）：主要文字最低 18px、眉题最低 20px；表格与卡片
     不得用紧行距伪造信息密度。`fit_text` 只在拥有明确剩余高度的分层卡片解释区中工作：在
     `min/max` 字号和对应行高上下限内二分搜索最大不溢出组合，绝不低于下限，也不应用于全页。
+14. **导航不能改变有效画布比例**（2026-11-16）：把 52px 导航放在 Reveal 外部并从视口高度扣除，
+    会让 1280×720 页面在 1280×668 区域内按高度缩小，造成左右留白。导航应覆盖画布顶部预留带；
+    普通页眉题移到导航下方，画布仍保持 16:9 或 4:3。四种组合是回归状态，不是四套模板。
+15. **自适应文字不能反转信息层级**（2026-11-17）：`.card p` 的选择器曾把 thesis 从 27px
+    覆盖成 20px，而 `fit_text` 将 detail 放大到 26px，实际形成 `detail > title > thesis`。分层卡片现以
+    更明确的选择器固定 `title 30px > thesis 28px > detail ≤26px > cue 18px`；视觉检查按计算字号验证
+    严格递减，层级反转记为 P1。
 
 ## 三、known non-goals
+
+- 多图不要嵌进 compare 文本卡片：原生图片尺寸与无约束高度会造成图片小、留白大。使用 multi-image 独立受约束区域，每图可选标题/说明，图像填满实际剩余空间；自动优化按图片比例排布，固定对照关系用手动网格。验收必须等待字体、公式、图片与布局完成。
 
 - 不追求动画/交互花活；`fragment` 过渡已显式关闭。
 - 不为"以后可能要"的布局预写代码；新布局在第二个真实用例出现时才加入 build.py。
@@ -78,3 +90,10 @@
 管道里再接 validate 会在**旧 HTML**上"通过"。教训：构建命令必须确认输出含
 `[build] 完成: ...（N 页）` 行，否则视为未构建；凡"改了 yaml 但页面没变"，先查构建命令与
 `[build] 完成` 标记。
+## 2026-11-18 · PDF 打印只得到当前页
+
+- **症状**：URL 加 `?print-pdf` 后浏览器打印仍只有一页，或出现 fragment 重复页、长页拆分和末尾空白页。
+- **根因**：导航模式的 `.has-chapter-nav .reveal` 固定为绝对定位和一屏高度；Reveal 默认还会为
+  fragment 分页，并按内容高度扩展页面。直接 Ctrl+P 没有等待延迟渲染的 Mermaid 与多图布局。
+- **固定处理**：不要把手动 Ctrl+P 当作交付流程。使用 `export_pdf.mjs`，由它限定一页一张、合并
+  fragment、修正打印容器、渲染全部延迟内容并核对实际 PDF 页数。

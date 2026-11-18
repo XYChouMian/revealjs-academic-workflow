@@ -9,6 +9,10 @@ import path from 'node:path';
 const outDir = process.argv[2];
 if (!outDir) { console.error('用法: node visual_check.mjs <deck>/output'); process.exit(2); }
 const indexUrl = 'file:///' + path.resolve(outDir, 'index.html').replace(/\\/g, '/');
+let manifest = {};
+try { manifest = JSON.parse(fs.readFileSync(path.join(outDir, 'build-manifest.json'), 'utf8')); } catch (_) { /* old deck fallback */ }
+const slideWidth = Number(manifest.slide_width) || 1280;
+const slideHeight = Number(manifest.slide_height) || 720;
 
 const EXEC_FALLBACKS = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -28,7 +32,7 @@ const report = { pages: [], console_errors: [], request_failed: [] };
 let browser;
 try {
   browser = await launch();
-  const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
+  const page = await browser.newPage({ viewport: { width: slideWidth, height: slideHeight }, deviceScaleFactor: 1 });
   page.on('console', (m) => { if (m.type() === 'error') report.console_errors.push(m.text().slice(0, 300)); });
   page.on('pageerror', (e) => report.console_errors.push('pageerror: ' + String(e).slice(0, 300)));
   page.on('requestfailed', (r) => report.request_failed.push(r.url()));
@@ -43,11 +47,12 @@ try {
 
   for (let i = 0; i < total; i++) {
     await page.evaluate((idx) => __deck.slide(idx), i);
+    await page.evaluate(() => window.__multiImageReady);
     await page.waitForTimeout(420);
-    const info = await page.evaluate(() => {
+    const info = await page.evaluate((logicalWidth) => {
       const slide = __deck.getCurrentSlide();
       const fr = slide.getBoundingClientRect();
-      const scale = fr.width / 1280 || 1;
+      const scale = fr.width / logicalWidth || 1;
       const tol = 4 / scale;
       const overflow = [];
       for (const el of slide.querySelectorAll('*')) {
@@ -72,6 +77,41 @@ try {
       const bad = slide.querySelector('.mermaid pre');
       if (bad && /Mermaid 渲染失败/.test(bad.textContent || '')) {
         mermaidError = bad.textContent.trim().slice(0, 300);
+      }
+      const mermaidLabelClipping = [];
+      for (const label of slide.querySelectorAll('.mermaid foreignObject p')) {
+        const box = label.getBoundingClientRect();
+        const foreign = label.closest('foreignObject');
+        if (!foreign) continue;
+        const outer = foreign.getBoundingClientRect();
+        if (box.right > outer.right + tol || box.bottom > outer.bottom + tol ||
+            box.left < outer.left - tol || box.top < outer.top - tol) {
+          mermaidLabelClipping.push({
+            text: (label.textContent || '').trim().slice(0, 60),
+            horizontal: Math.max(0, box.right - outer.right, outer.left - box.left),
+            vertical: Math.max(0, box.bottom - outer.bottom, outer.top - box.top),
+          });
+        }
+      }
+      const hierarchyFontOrder = [];
+      for (const card of slide.querySelectorAll('.card-mode-hierarchy .card')) {
+        const title = card.querySelector('h3');
+        const thesis = card.querySelector('.card-thesis');
+        const detail = card.querySelector('.cd-text') || card.querySelector('.card-detail');
+        if (!title || !thesis || !detail) continue;
+        const sizes = {
+          title: parseFloat(getComputedStyle(title).fontSize),
+          thesis: parseFloat(getComputedStyle(thesis).fontSize),
+          detail: parseFloat(getComputedStyle(detail).fontSize),
+        };
+        if (!(sizes.title > sizes.thesis && sizes.thesis > sizes.detail)) {
+          hierarchyFontOrder.push({
+            label: (title.textContent || '').trim().slice(0, 40),
+            title_size: sizes.title,
+            thesis_size: sizes.thesis,
+            detail_size: sizes.detail,
+          });
+        }
       }
       // 只保留最外层越界元素：若已记录的元素包含当前元素，则跳过；
       // 若当前元素包含已记录元素，则替换之（避免同一根因刷出几十条 P1）。
@@ -128,12 +168,14 @@ try {
         sparse,
         cite_overlap: citeOverlap,
         mermaid_total: mm.length, mermaid_rendered: rendered.length, mermaid_error: mermaidError,
+        mermaid_label_clipping: mermaidLabelClipping,
+        hierarchy_font_order: hierarchyFontOrder,
         mathjax_expected: slide.hasAttribute('data-math'),
         mathjax_any: slide.querySelectorAll('mjx-container').length,
         mathjax_error: mathjaxError,
         _src_has_math: /\$|\\\(|\\\[/.test(srcNoNotes),
       };
-    });
+    }, slideWidth);
     if (info._src_has_math && !info.mathjax_expected) {
       info.mathjax_expected = true; // 兜底：build 未打标但源码含公式
     }
@@ -152,6 +194,8 @@ const bad = report.console_errors.length + report.request_failed.length +
   report.pages.reduce((n, p) => n + p.overflow.length + (p.scroll_overflow ? 1 : 0) +
     (p.cite_overlap ? 1 : 0) +
     (p.mermaid_total > p.mermaid_rendered ? 1 : 0) + (p.mermaid_error ? 1 : 0) +
+    (p.mermaid_label_clipping?.length || 0) +
+    (p.hierarchy_font_order?.length || 0) +
     ((p.mathjax_expected && !p.mathjax_any) ? 1 : 0), 0);
 console.log(`[visual] ${report.pages.length} 页已截图; 异常计数=${bad}`);
 process.exit(bad ? 1 : 0);

@@ -5,6 +5,7 @@
    content/deck.css 中，不要修改本文件，除非全体页面需要且已做回归。
    ============================================================ */
 :root{
+  --r-heading-text-transform:none; /* Preserve author names, model names and acronyms as written. */
   --ink:#1c1c1c; --sub:#4a4a4a; --faint:#7a7a72;
   --bg:#fcfbf6; --card:#ffffff; --line:#d9d5ca;
   --accent:#1560bd;   /* 主强调：定义、结论、正向 */
@@ -13,10 +14,12 @@
   --warn:#8a1c1c;     /* 风险/缺失/不可观测 */
   --purple:#7b4fa6;   /* 机制/注意力类 */
   --teal:#0f766e;     /* 物理/守恒类 */
+  --slide-width:1280px; --slide-height:720px;
 }
-/* 全局章节导航：固定高度，Reveal 在剩余视口中等比缩放，内部版面不变。 */
+body.ratio-4-3{ --slide-width:960px; --slide-height:720px; }
+/* 全局章节导航：覆盖画布顶部预留带，不再压缩 Reveal 视口。 */
 .has-chapter-nav{ --chapter-nav-height:52px; }
-.has-chapter-nav .reveal{ position:absolute; left:0; right:0; top:var(--chapter-nav-height); height:calc(100% - var(--chapter-nav-height)); }
+.has-chapter-nav .reveal{ position:absolute; inset:0; width:100%; height:100%; }
 .chapter-nav{ box-sizing:border-box; position:absolute; top:0; left:0; right:0; height:52px; z-index:30;
   display:flex; align-items:stretch; padding:0 12px; gap:6px;
   background:var(--bg); border-bottom:1px solid var(--line);
@@ -28,14 +31,14 @@
 .chapter-nav button{ flex:0 0 28px; padding:0; border:0; background:transparent; color:var(--accent); font:28px serif; cursor:pointer; }
 .chapter-nav button:disabled{ opacity:.2; cursor:default; }
 .chapter-nav :focus-visible{ outline:2px solid var(--accent); outline-offset:-3px; }
-@media print{ .chapter-nav{ display:none; } .has-chapter-nav .reveal{ top:0; height:100%; } }
+@media print{ .chapter-nav{ display:none; } }
 .reveal-viewport{ background:var(--bg); }
 .reveal{
   font-family:"Times New Roman","STSong","SimSun","Songti SC","Noto Serif CJK SC",serif;
   font-size:26px; color:var(--ink);
 }
 .reveal .slides section{
-  width:1280px; height:720px; padding:34px 52px 58px 52px;
+  width:var(--slide-width); height:var(--slide-height); padding:34px 52px 58px 52px;
   box-sizing:border-box; text-align:left; overflow:visible;
 }
 .reveal .slides section, .reveal .slides section *{ box-sizing:border-box; }
@@ -66,6 +69,16 @@
 .tiny li{ font-size:18px; line-height:1.42; }
 .q{ background:var(--card); border-left:4px solid var(--accent); padding:10px 16px; margin:8px 0; }
 .q.main{ border-left-color:var(--warn); }
+/* Shared reminders reserve their natural height before the main region flexes. */
+.slide-alerts{ flex:0 0 auto; display:flex; flex-direction:column; gap:8px; margin-top:12px; width:100%; text-align:left; }
+.reveal .slide-alert{ flex:none; padding:10px 16px; font-size:20px; line-height:1.45; overflow-wrap:break-word; }
+.reveal .slide-alert :is(p,li){ font-size:20px; line-height:1.45; }
+.alert-note{ color:var(--sub); background:#f4f4f2; border:1px solid #deded8; border-radius:5px; }
+.alert-callout{ background:#f0f5fb; border-left:4px solid var(--accent); }
+.alert-callout.alert-main{ border-left-color:var(--warn); }
+.alert-box{ background:#e5edf7; border:2px solid var(--accent); border-radius:6px; }
+.alert-label{ font-weight:700; }
+.reveal .slides section:has(> .slide-alerts) > .image-mode-side-dominant{ min-height:0; }
 .q .lab{ font-size:18px; color:var(--faint); letter-spacing:.08em; }
 .note-box{ border:1.5px dashed var(--good); border-radius:10px; padding:8px 14px; background:#f4faf5; }
 .tbd-box{ border:1.5px dashed var(--faint); border-radius:10px; padding:8px 14px; background:#faf9f4; }
@@ -115,9 +128,9 @@ svg text{ font-family:"Times New Roman","STSong","SimSun","Songti SC","Noto Seri
 /* ---- 分层卡片与章节导读：核心判断 > 解释 > 讨论提示 ---- */
 .card-mode-hierarchy{ min-height:420px; align-items:stretch; }
 .card-mode-hierarchy .card{ min-height:420px; padding:20px 18px; display:flex; flex-direction:column; }
-.card-mode-hierarchy h3{ font-size:24px; margin-bottom:8px; }
+.card-mode-hierarchy h3{ font-size:30px; margin-bottom:8px; }
 .card-index{ font-size:17px; font-weight:700; color:var(--accent); letter-spacing:.12em; }
-.card-thesis{ margin:12px 0 14px; font-size:27px; font-weight:700; line-height:1.27; color:var(--ink); }
+.card-mode-hierarchy .card-thesis{ margin:12px 0 14px; font-size:28px; font-weight:700; line-height:1.27; color:var(--ink); }
 .hierarchy-card{ height:100%; display:flex; flex-direction:column; }
 .card-detail{ flex:1; display:flex; align-items:center; margin:0; font-size:20px; line-height:1.48; color:var(--sub); }
 .card-cue{ margin-top:auto; padding-top:13px; border-top:1px solid var(--line); font-size:18px; line-height:1.42; color:var(--faint); }
@@ -133,14 +146,12 @@ svg text{ font-family:"Times New Roman","STSong","SimSun","Songti SC","Noto Seri
 .conclusion-grid .conclusion-card b{ display:block; font-size:22px; margin-bottom:10px; }
 .conclusion-grid .conclusion-card li{ font-size:18px; line-height:1.45; }
 
-/* ---- Mermaid：手动渲染 + 已验证的裁剪修复 ---- */
-/* 修复：mermaid 沙箱按 line-height:1em 测量标签高度，渲染态继承 .reveal 的更大行高
-   会被 foreignObject 裁剪，此处压回一致（来自实践版踩坑记录） */
-.mermaid{ display:flex; justify-content:center; background:var(--card);
-  border:1px solid var(--line); border-radius:10px; padding:6px; margin:8px 0; }
-pre.mermaid{ font-family:inherit; white-space:pre; margin:8px 0; }
-.mermaid svg{ max-width:100%; height:auto; }
-.mermaid foreignObject div, .mermaid foreignObject span{ line-height:1 !important; }
+/* ---- Mermaid：使用官方 neutral 主题 ----
+   不修改字体、字号、颜色、节点边框或连线。这里只隔离 Reveal 的 p 规则，
+   让 Mermaid 11 的 HTML 标签继承 Mermaid 自己生成的样式。 */
+.mermaid foreignObject p{
+  font-size:inherit !important; line-height:inherit !important; margin:0 !important;
+}
 
 /* ---- 布局：封面 / 章节过渡 ----
    注意：必须用 .reveal .slides section 前缀提高优先级，
@@ -239,6 +250,21 @@ pre.mermaid{ font-family:inherit; white-space:pre; margin:8px 0; }
   line-height:28px; margin:0; white-space:nowrap;
 }
 .reveal .slides section:is(.layout-bullets,.layout-image,.layout-image-text,.layout-compare,.layout-table,.layout-roadmap,.layout-conclusion,.layout-chapter-overview) > h2{ flex:0 0 auto; }
+/* 开启导航时，眉题移到导航下方；标题整体下移但仍保持所有普通页等高。 */
+.has-chapter-nav .reveal .slides section:is(.layout-bullets,.layout-image,.layout-image-text,.layout-compare,.layout-table,.layout-roadmap,.layout-conclusion,.layout-chapter-overview){ padding-top:92px; }
+.has-chapter-nav .reveal .slides section:is(.layout-bullets,.layout-image,.layout-image-text,.layout-compare,.layout-table,.layout-roadmap,.layout-conclusion,.layout-chapter-overview) > .kicker{
+  top:58px; height:26px; line-height:26px;
+}
+.has-chapter-nav .reveal .slides section.layout-html{ padding-top:54px; }
+/* 4:3 仅调整横向组织，不降低字号。 */
+body.ratio-4-3 .reveal .slides section{ padding-left:42px; padding-right:42px; }
+body.ratio-4-3 .cite{ left:42px; right:42px; }
+body.ratio-4-3 .reveal .slide-number{ right:42px; }
+body.ratio-4-3 .cols{ gap:18px; }
+body.ratio-4-3 .image-mode-side-dominant{ grid-template-columns:1.18fr 1fr; gap:20px; }
+body.ratio-4-3 .image-mode-side-dominant.text-image{ grid-template-columns:1fr 1.18fr; }
+body.ratio-4-3 .image-mode-wide-hero .image-copy ul{ columns:2; column-gap:22px; }
+body.ratio-4-3 .section-slide .hierarchy-list{ gap:12px; }
 .reveal .fragment{ transition:none; }
 /* 页码页脚（v1.4.2）：与 cite 脚注同一基线——右侧 52px 对齐内容边距、
    bottom 16px 与 cite 文字同行；去掉 vendor 默认的深色 chip 与 Helvetica。
@@ -248,3 +274,30 @@ pre.mermaid{ font-family:inherit; white-space:pre; margin:8px 0; }
   font-family:inherit; font-size:16px; line-height:1.4;
   color:var(--faint); white-space:nowrap;
 }
+
+/* Multi-image owns its constrained picture region; no inherited card padding. */
+.reveal .slides section.layout-multi-image{ display:flex !important; flex-direction:column; padding-top:72px; }
+.reveal .slides section.layout-multi-image > h2{ flex:0 0 auto; }
+.reveal .slides section.layout-multi-image > .kicker{
+  position:absolute; top:34px; left:52px; right:52px; height:28px; line-height:28px; margin:0; white-space:nowrap;
+}
+.has-chapter-nav .reveal .slides section.layout-multi-image{ padding-top:92px; }
+.has-chapter-nav .reveal .slides section.layout-multi-image > .kicker{ top:58px; height:26px; line-height:26px; }
+.multi-images{ position:relative; flex:1; min-height:0; --multi-gap:16px; }
+.multi-images[data-mode="manual"]{ display:grid; gap:var(--multi-gap); }
+.multi-panel{ min-width:0; min-height:0; display:flex; flex-direction:column; gap:8px; }
+.multi-images[data-mode="auto"] > .multi-panel{ position:absolute; }
+.reveal .multi-panel > .multi-title{ flex:none; font-size:22px; line-height:1.35; margin:0; }
+.reveal .multi-panel > .figure{ position:relative; flex:1 1 0; min-height:0; width:100%; margin:0; padding:0; border:0; background:transparent; }
+.reveal .multi-panel > .figure > img{ position:absolute; inset:0; display:block; width:100%; height:100%; max-width:none; max-height:none; margin:0; object-fit:contain; }
+.reveal .multi-panel .multi-copy, .reveal .multi-panel .multi-copy :is(p,li){ font-size:20px; line-height:1.45; }
+.multi-copy{ flex:none; margin:0; overflow-wrap:break-word; }
+.multi-copy:has(mjx-container){ padding-block:6px; }
+.reveal .multi-copy ul{ margin:0; padding-left:1.2em; }
+.reveal .multi-copy li{ margin:0; }
+.multi-panel{ position:relative; }
+.reveal .multi-panel > :is(.figure,.multi-title,.multi-copy){ position:absolute; text-align:center; }
+.reveal .multi-panel.multi-measure > :is(.multi-title,.multi-copy){ position:static; }
+.reveal .multi-copy ul{ display:inline-block; max-width:100%; text-align:center; }
+.multi-images[data-multi-state="error"]{ outline:2px solid var(--warn); }
+.multi-images[data-multi-state="error"]::after{ content:attr(data-multi-error); position:absolute; bottom:0; left:0; right:0; background:#fff4f2; color:var(--warn); font-size:20px; }
