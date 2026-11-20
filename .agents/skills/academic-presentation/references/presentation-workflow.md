@@ -90,7 +90,8 @@
 目录固定为一章一行的纵向排列，按章数在 52–96px 范围内自动分配行高，不缩小章名字号。
 当前最多 8 章。`layout: ending` 既是结束页模板，也是正文/附录边界：之后的 section 保留章节页
 视觉样式，但不进入总览与导航，且不高亮正文章节。整份 deck 最多一个 ending；省略时所有 section
-均属于正文。chapter-overview 必须位于 ending 前，且正文至少有一个 section。
+均属于正文。页码分母自动取 ending 的实际页码；附录的当前页码继续递增，但不增加分母。无 ending
+时分母为全部幻灯片数量。chapter-overview 必须位于 ending 前，且正文至少有一个 section。
 
 **输入**：冻结的 slides.yaml + assets。**操作范围**：只运行 `build.py`；不手改 output/。
 
@@ -185,7 +186,7 @@ box.style: note/tbd 接受但统一为强提醒，不改变结论页原有栏目
 | image-text | image{src,caption} / side:left\|right / `image_mode: side\|side-dominant\|wide-hero` / bullets / callout / mermaid（max_height 已废弃） |
 | multi-image | images[{src,title?,content?,alt?,white_background?}] / mode:auto\|manual / gap（默认16）/ callout；manual 另需 columns、rows 正数权重列表，每图 row/column（从1开始）、rowspan/colspan（默认1） |
 | compare | cols[{title,items 或 thesis/detail/cue，html 兼容，highlight}] / `card_mode: standard\|hierarchy` / callout / mermaid |
-| table | headers / rows / highlight_row / `table_mode: standard\|spacious\|compact` / dense（兼容）/ note / mermaid |
+| table | headers / rows / highlight_row（单行）/ highlight_rows（多行整数列表）/ `table_mode: standard\|spacious\|compact` / dense（兼容）/ note / mermaid |
 | roadmap | steps[{phase, items 或 thesis/detail/cue}] / `card_mode: standard\|hierarchy` / 可选 `fit_text` / mermaid / note |
 | conclusion | takeaways / open / next / 可选 `labels: {takeaways, open, next}`（页面级栏目名）/ `conclusion_mode: standard\|cards` / callout |
 | chapter-overview | 仅通用提醒字段；目录自动列出 ending 之前的 section（最多 8 章） |
@@ -226,7 +227,9 @@ right 下标题与说明一起在右栏上下排列、文字居中，整个文�
 自动算法读取原始图片纵横比，并在字体、公式、图片就绪后测量实际文本；采用有界分组搜索，
 优先放大最小图片，其次增大总图片面积，并保留等分网格面积基线。它不推断叙事主次、不裁原图白边。
 手动模式通过行列权重和跨度分配空间，构建期拒绝重叠、越界和无效权重。所有配置仍在 slides.yaml 中。
-图片缺失、文本无法容纳时显式报错；视觉验收等待布局完成。模板修改后运行 `node tests/multi-image.mjs`，
+字号按图片数自动分档：2–3图为22/20px、4图为20/18px、5图以上为18/18px；同页统一，文字仍
+无法容纳时按比例继续缩小并选择最大可行字号。多图页允许低于普通页面18px下限，不能因此单独判为
+P0/P1。图片缺失、网格无有效尺寸时仍显式报错；视觉验收等待布局完成。模板修改后运行 `node tests/multi-image.mjs`，
 覆盖四种画布/导航状态及自动、手动、缺图和非法配置。示例与完整 YAML 写法见根 README。
 
 ## 附录 B：对抗测试（重大改动后必须重跑）

@@ -51,6 +51,9 @@ try {
     await page.goto(url);
     await page.waitForFunction(() => window.__deck?.isReady());
   }
+  async function pageNumber() {
+    return (await page.locator('.slide-number').textContent()).replace(/\s+/g, '');
+  }
   await load(on.url);
   assert.equal(await page.locator('.chapter-track a').count(), 8);
   assert.equal(await page.locator('.chapter-overview-item').count(), 8);
@@ -84,9 +87,17 @@ try {
   await page.locator('.chapter-overview-item').last().click();
   assert.equal(await page.evaluate(() => __deck.getCurrentSlide().id), 'chapter-7');
 
-  for (const id of ['ending', 'appendix-section', 'appendix-content']) {
+  const mainTotal = indexOf('ending') + 1;
+  await page.evaluate(idx => __deck.slide(idx), indexOf('ending') - 1);
+  assert.equal(await pageNumber(), `${mainTotal - 1}/${mainTotal}`);
+  for (const [id, expected] of [
+    ['ending', `${mainTotal}/${mainTotal}`],
+    ['appendix-section', `${mainTotal + 1}/${mainTotal}`],
+    ['appendix-content', `${mainTotal + 2}/${mainTotal}`]
+  ]) {
     await page.evaluate(idx => __deck.slide(idx), indexOf(id));
     assert.equal(await page.locator('[aria-current]').count(), 0, id);
+    assert.equal(await pageNumber(), expected, id);
   }
   await load(on.url + '#/appendix-content');
   assert.equal(await page.locator('[aria-current]').count(), 0);
@@ -118,6 +129,8 @@ try {
     assert.ok(Math.abs(mode.width - width) < 1, JSON.stringify(mode));
     assert.ok(Math.abs(mode.height - 720) < 1, JSON.stringify(mode));
     assert.equal(mode.hasNav, hasNav);
+    await page.evaluate(idx => __deck.slide(idx), indexOf('appendix-content'));
+    assert.equal(await pageNumber(), `${mainTotal + 2}/${mainTotal}`);
   }
   await page.setViewportSize({ width: 800, height: 600 });
   await load(on.url);
@@ -127,8 +140,11 @@ try {
     assert.equal(await page.locator('.chapter-nav').count(), 0);
     assert.equal(await page.locator('body').evaluate(el => el.classList.contains('has-chapter-nav')), false);
   }
+  await load(noSections.url);
+  await page.evaluate(() => __deck.slide(__deck.getTotalSlides() - 1));
+  assert.equal(await pageNumber(), '2/2');
   assert.deepEqual(errors, []);
-  console.log('PASS: 16:9/4:3 × 导航开关、总览、ending 边界、点击与标题对齐');
+  console.log('PASS: 16:9/4:3 × 导航开关、总览、ending 正文页码边界、点击与标题对齐');
 } finally {
   await browser.close();
 }

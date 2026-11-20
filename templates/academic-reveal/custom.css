@@ -283,14 +283,15 @@ body.ratio-4-3 .section-slide .hierarchy-list{ gap:12px; }
 }
 .has-chapter-nav .reveal .slides section.layout-multi-image{ padding-top:92px; }
 .has-chapter-nav .reveal .slides section.layout-multi-image > .kicker{ top:58px; height:26px; line-height:26px; }
-.multi-images{ position:relative; flex:1; min-height:0; --multi-gap:16px; }
+.multi-images{ position:relative; flex:1; min-height:0; --multi-gap:16px;
+  --multi-title-size:22px; --multi-copy-size:20px; }
 .multi-images[data-mode="manual"]{ display:grid; gap:var(--multi-gap); }
 .multi-panel{ min-width:0; min-height:0; display:flex; flex-direction:column; gap:8px; }
 .multi-images[data-mode="auto"] > .multi-panel{ position:absolute; }
-.reveal .multi-panel > .multi-title{ flex:none; font-size:22px; line-height:1.35; margin:0; }
+.reveal .multi-panel > .multi-title{ flex:none; font-size:var(--multi-title-size); line-height:1.35; margin:0; }
 .reveal .multi-panel > .figure{ position:relative; flex:1 1 0; min-height:0; width:100%; margin:0; padding:0; border:0; background:transparent; }
 .reveal .multi-panel > .figure > img{ position:absolute; inset:0; display:block; width:100%; height:100%; max-width:none; max-height:none; margin:0; object-fit:contain; }
-.reveal .multi-panel .multi-copy, .reveal .multi-panel .multi-copy :is(p,li){ font-size:20px; line-height:1.45; }
+.reveal .multi-panel .multi-copy, .reveal .multi-panel .multi-copy :is(p,li){ font-size:var(--multi-copy-size); line-height:1.45; }
 .multi-copy{ flex:none; margin:0; overflow-wrap:break-word; }
 .multi-copy:has(mjx-container){ padding-block:6px; }
 .reveal .multi-copy ul{ margin:0; padding-left:1.2em; }

@@ -15,6 +15,8 @@ for (const deck of decks) {
   const run = spawnSync(process.execPath, [exporter, deck], { encoding: 'utf8' });
   assert.equal(run.status, 0, run.stderr || run.stdout);
   const manifest = JSON.parse(fs.readFileSync(path.join(deck, 'output', 'build-manifest.json'), 'utf8'));
+  assert.ok(Number.isInteger(manifest.main_total) && manifest.main_total > 0 && manifest.main_total <= manifest.slides,
+    'manifest has no valid ending-based main_total');
   const pdf = fs.readFileSync(path.join(deck, 'presentation.pdf'));
   assert.equal((pdf.toString('latin1').match(/\/Type\s*\/Page\b/g) || []).length, manifest.slides);
   const boxes = [...pdf.toString('latin1').matchAll(/\/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*\]/g)];

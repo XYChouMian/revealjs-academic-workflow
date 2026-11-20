@@ -1,5 +1,50 @@
 # Portable workflow validation
 
+## 2026-11-20 · 仓库 v0.1 发布验收
+
+- v0.1 冻结当前单主题能力：slides.yaml 唯一内容源、13种布局、16:9/4:3、可选章节导航、
+  自动目录与 ending 边界、三级提醒、多图自适应、表格多行突出、离线公式/Mermaid、Presenter Notes、
+  视觉验收及一键 PDF 导出。
+- 发布前重跑 `table-highlight.py`、`alerts.py`、`multi-image.mjs`、`chapter-nav.mjs`、
+  `pdf-export.mjs` 与 starter 完整视觉验收；P0=0、P1=0，唯一 P2 为既有短附录页自然留白。
+- 工作流与展示主题的完全分离不纳入 v0.1；作为仓库 v1 主目标登记于 `ROADMAP.md`。
+
+## 2026-11-20 · v1.11.2 预览：ending 固定正文页码分母
+
+- starter checkpoint：`pre-ending-page-total`；源码备份位于 `backups/pre-ending-page-total-20261120/`。
+- 构建清单和页面数据新增 `main_total`：有 ending 时为其实际页码，无 ending 时为整份 deck 页数；
+  不新增 slides.yaml 字段，也不改变章节导航、目录及附录排除规则。
+- HTML 页码使用固定正文分母；Reveal 4.6.1 的 PDF 打印器会绕过自定义页码并硬编码裸页号，导出器
+  因此在打印页面生成后重新应用同一分母。starter 第19–22页验证为 `19/20`、`20/20`、
+  `21/20`、`22/20`，PDF文本提取结果一致。
+- `chapter-nav.mjs` 覆盖16:9/4:3、导航开关、有/无 ending及附录连续页码；四种比例/导航组合
+  均重建并成功导出22页 PDF，页数与画布比例正确。`table-highlight.py`、`alerts.py`、完整
+  `multi-image.mjs` 均通过；starter `validate.py --visual` 为 P0=0、P1=0、P2=1（仅既有短附录页
+  自然留白）。人工复核 ending 与附录截图，页码和 cite 基线正常，无控制按钮、导航或内容重叠。
+  未提交或推送。
+
+## 2026-11-19 · v1.11.1 预览：表格多行突出
+
+- starter checkpoint：`pre-table-highlight-rows`；源码备份位于 `backups/pre-table-highlight-rows-20261119/`。
+- table 新增 `highlight_rows` 零基整数列表；与旧 `highlight_row` 同时声明时取并集并去重，负数、
+  布尔值、非列表和越界索引均在构建期报错。
+- starter 舒适表格改为同时突出第2、3条数据行，截图确认行高、三级提醒与页脚不受影响。
+- `tests/table-highlight.py` 覆盖旧单行、多行并集/去重及非法值；starter完整视觉验收
+  P0=0、P1=0、P2=1（仅既有短附录页自然留白）。`alerts.py`、`chapter-nav.mjs`、
+  `pdf-export.mjs`和完整`multi-image.mjs`跨功能回归全部通过。未提交或推送。
+
+## 2026-11-19 · v1.11.0 预览：多图统一字号自适应
+
+- starter checkpoint：`pre-multi-font-fit`；源码备份位于 `backups/pre-multi-font-fit-20261119/`。
+- multi-image 按2–3图22/20px、4图20/18px、5图以上18/18px起步；同页标题与说明字号统一。
+  起始字号仍放不下时以75%递减查找可行区间，再二分8轮取得最大可行字号，不截断文字。
+- `tests/multi-image.mjs` 覆盖2/3/4/5/6图、低于18px的超长说明、auto/manual、三种文字位置、
+  四种画布/导航组合、文件/HTTP与原有错误场景。超长说明压力页解析为标题3.640px、说明3.309px，
+  状态ready且无溢出，证明未设置内容字号下限。
+- `chapter-nav.mjs`、`alerts.py`、`pdf-export.mjs`与完整多图测试全部通过；starter完整
+  `validate.py --visual`：P0=0、P1=0、P2=1（仅既有短附录页自然留白）。PDF仍为22页且导出通过。
+  未提交或推送，等待预览反馈。
+
 ## 2026-11-18 · v1.10.0 预览：一键 PDF 导出
 
 - starter checkpoint：`pre-pdf-export`；源码备份位于 `backups/pre-pdf-export-20261118/`。

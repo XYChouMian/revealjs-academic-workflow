@@ -85,13 +85,13 @@ slides:
         - [顶部标题, 有无眉题均对齐]
         - [行间留白, 自动利用剩余高度]
         - [重点行, 浅色突出]
-      highlight_row: 2
+      highlight_rows: [1, 2]
       note: 补充说明：短表优先使用 spacious。
       callout: {label: 关键认识, text: 表格行高自动利用剩余空间。}
       box: {label: 重要限制, text: 不通过缩字或隐藏内容来通过验收。}
     cite: *cite
     sources: *sources
-    notes: 舒适表格展示标题对齐、自动行高分配、highlight_row 和通用三级提醒。note 为弱提示，callout 为关键认识，box 为重要限制；三者自然高度预留后，表格利用剩余空间。眉题不会参与表格容器的伸展。
+    notes: 舒适表格展示标题对齐、自动行高分配、highlight_rows 多行突出和通用三级提醒。行号从0开始；旧的单行 highlight_row 仍兼容。note 为弱提示，callout 为关键认识，box 为重要限制；三者自然高度预留后，表格利用剩余空间。眉题不会参与表格容器的伸展。
 
   - slide_id: s06-standard
     layout: table
@@ -222,7 +222,7 @@ slides:
           white_background: blend
     cite: academic-presentation · 自绘示意与已有截图，非实验数据
     sources: [starter/assets-manifest.md]
-    notes: 多图自动模式允许换序，综合图片纵横比和文字高度比较横向、纵向及混合排布。近方图未指定说明位置，自动比较下方与右侧；宽图显式限定说明在下方。标题与说明按实际图片居中。第三图省略标题和说明，空间归还图片。JPG 展示原有白底融合能力，原图不变。
+    notes: 多图自动模式允许换序，综合图片纵横比和文字高度比较横向、纵向及混合排布。近方图未指定说明位置，自动比较下方与右侧；宽图显式限定说明在下方。标题与说明按实际图片居中；同页字号统一，并按图片数量选择起始档位，空间不足时继续整体缩小。第三图省略标题和说明，空间归还图片。JPG 展示原有白底融合能力，原图不变。
 
   - slide_id: s13b-multi-manual
     layout: multi-image

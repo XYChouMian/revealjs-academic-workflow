@@ -85,13 +85,22 @@ window.MathJax = {
     return chain;
   }
 
+  /* 章节和正文边界均由构建器提取；ending 是正文最后一页。 */
+  var chapterInfo = JSON.parse(document.getElementById('chapter-data').textContent);
+  var chapters = chapterInfo.chapters || [];
+  var mainEnd = Number.isInteger(chapterInfo.mainEnd) ? chapterInfo.mainEnd : Infinity;
+  var mainTotal = Number.isInteger(chapterInfo.mainTotal) ? chapterInfo.mainTotal : null;
+
   /* ---- Reveal 初始化：画布比例由 slides.yaml 的 deck.aspect_ratio 决定 ---- */
   var deck = new Reveal({
     hash: true,
     history: true,
-    /* 页码格式必须精确匹配 vendor 支持的字面量：'c'（当前页）或 'c/t'（当前/总数）。
-       'c / t' 带空格不匹配任何 case，静默走 default 分支退化为裸页号（v1.4.2 教训）。 */
-    slideNumber: 'c/t',
+    /* 当前页按整份 HTML 连续计数；分母固定为 ending 的实际页码。
+       因而附录可显示 21/20，但不会反向改变正文总页数。 */
+    slideNumber: function(slide) {
+      var current = deck.getSlidePastCount(slide) + 1;
+      return [current, '/', mainTotal || deck.getTotalSlides()];
+    },
     /* 页码与页脚同行后，隐藏常驻的回退箭头避免与页码挤同一角落
        （键盘/触摸向后翻页不受影响） */
     controlsBackArrows: 'hidden',
@@ -108,10 +117,7 @@ window.MathJax = {
     overview: true,
     plugins: [ RevealNotes ]
   });
-  /* 章节由构建器从 section 页提取；导航覆盖画布顶部预留带，不改变页面比例。 */
-  var chapterInfo = JSON.parse(document.getElementById('chapter-data').textContent);
-  var chapters = chapterInfo.chapters || [];
-  var mainEnd = Number.isInteger(chapterInfo.mainEnd) ? chapterInfo.mainEnd : Infinity;
+  /* 导航覆盖画布顶部预留带，不改变页面比例。 */
   var chapterLinks = [];
   var chapterTrack;
   function syncChapter(){

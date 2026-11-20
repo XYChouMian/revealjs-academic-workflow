@@ -56,7 +56,7 @@ LAYOUT_FIELDS = {
     "image-text": {"image", "side", "image_mode", "bullets", "callout", "mermaid"},
     "multi-image": {"mode", "images", "columns", "rows", "gap", "callout"},
     "compare": {"cols", "card_mode", "callout", "fit_text", "mermaid"},
-    "table": {"headers", "rows", "highlight_row", "table_mode", "dense", "note", "mermaid"},
+    "table": {"headers", "rows", "highlight_row", "highlight_rows", "table_mode", "dense", "note", "mermaid"},
     "roadmap": {"steps", "card_mode", "fit_text", "mermaid", "note"},
     "conclusion": {"takeaways", "open", "next", "conclusion_mode", "labels", "callout"},
     "chapter-overview": set(),
@@ -358,6 +358,24 @@ def r_compare(slide):
     return "".join(parts)
 
 
+def table_highlight_indices(content):
+    """Return the union of legacy singular and new plural zero-based row indices."""
+    values = []
+    if content.get("highlight_row") is not None:
+        values.append(content["highlight_row"])
+    if content.get("highlight_rows") is not None:
+        plural = content["highlight_rows"]
+        if not isinstance(plural, list):
+            raise ValueError("highlight_rows 必须是从 0 开始的整数列表")
+        values.extend(plural)
+    if any(type(value) is not int or value < 0 for value in values):
+        raise ValueError("highlight_row/highlight_rows 必须是从 0 开始的非负整数")
+    row_count = len(content.get("rows", []))
+    if any(value >= row_count for value in values):
+        raise ValueError(f"highlight_row/highlight_rows 超出表格范围（当前 {row_count} 行，从 0 开始）")
+    return set(values)
+
+
 def r_table(slide):
     c = slide.get("content", {})
     mode = c.get("table_mode", "compact" if c.get("dense") else "standard")
@@ -367,9 +385,9 @@ def r_table(slide):
         parts.append(f'  <div class="{wrap.strip()}">\n')
     heads = "".join(f"<th>{e(h)}</th>" for h in c.get("headers", []))
     parts.append(f'    <table class="cmp">\n      <thead><tr>{heads}</tr></thead>\n      <tbody>\n')
-    hl = c.get("highlight_row")
+    highlights = table_highlight_indices(c)
     for i, row in enumerate(c.get("rows", [])):
-        cls = ' class="me"' if hl is not None and i == hl else ""
+        cls = ' class="me"' if i in highlights else ""
         tds = "".join(f"<td>{e(cell)}</td>" for cell in row)
         parts.append(f'        <tr{cls}>{tds}</tr>\n')
     parts.append("      </tbody>\n    </table>\n")
@@ -499,6 +517,11 @@ def render_slide(slide, idx, chapters):
         raise ValueError(f"[{sid}] image_mode 必须是 {sorted(IMAGE_MODES)}")
     if layout == "table" and content.get("table_mode", "compact" if content.get("dense") else "standard") not in TABLE_MODES:
         raise ValueError(f"[{sid}] table_mode 必须是 {sorted(TABLE_MODES)}")
+    if layout == "table":
+        try:
+            table_highlight_indices(content)
+        except ValueError as ex:
+            raise ValueError(f"[{sid}] {ex}") from ex
     if layout in {"compare", "roadmap"} and content.get("card_mode", "standard") not in CARD_MODES:
         raise ValueError(f"[{sid}] card_mode 必须是 {sorted(CARD_MODES)}")
     if layout == "section" and content.get("point_mode", "standard") not in {"standard", "hierarchy"}:
@@ -569,6 +592,7 @@ def build(deck_dir):
     if len(ending_indices) > 1:
         sys.exit("[build] ending 页面只能有一个；它定义正文与附录的唯一边界")
     main_end = ending_indices[0] if ending_indices else len(slides)
+    main_total = ending_indices[0] + 1 if ending_indices else len(slides)
     chapters = []
     for i, slide in enumerate(slides[:main_end]):
         if slide.get("layout") == "section":
@@ -588,7 +612,8 @@ def build(deck_dir):
         sys.exit(f"[build] {ex}")
     template = TEMPLATE.read_text(encoding="utf-8")
     # JSON 数据不作为 HTML 执行；转义 < 防止标题中的 </script> 提前结束数据块。
-    chapter_data = json.dumps({"chapters": chapters if chapter_nav else [], "mainEnd": main_end},
+    chapter_data = json.dumps({"chapters": chapters if chapter_nav else [],
+                               "mainEnd": main_end, "mainTotal": main_total},
                               ensure_ascii=False).replace("<", "\\u003c")
     deck_css_tag = ""
     if (deck_dir / "content" / "deck.css").exists():
@@ -634,6 +659,7 @@ def build(deck_dir):
         {"deck": deck_meta.get("title", ""), "slides": len(slides),
          "aspect_ratio": aspect_ratio, "slide_width": slide_width, "slide_height": slide_height,
          "chapter_nav": chapter_nav,
+         "main_total": main_total,
          "slide_ids": [s["slide_id"] for s in slides]}, ensure_ascii=False, indent=2),
         encoding="utf-8")
     print(f"[build] 完成: {out_dir / 'index.html'}（{len(slides)} 页，vendor 已就位）")

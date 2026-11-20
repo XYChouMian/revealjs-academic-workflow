@@ -55,7 +55,8 @@ const src = ['square.svg', 'wide.svg', 'white-background.png', 'white-background
 const images = count => Array.from({ length: count }, (_, i) => ({ src: 'assets/diagrams/' + src[i % src.length],
   ...(i % 3 === 0 ? { title: '标题可换行：图片与物理解释', content: '带公式 $u(t)$ 的文字说明。' } : {}),
   ...(i % 3 === 1 ? { content: ['说明按实际高度占位。'], white_background: 'blend' } : {}) }));
-const stress = build('stress', { deck: { title: '测试' }, slides: [2, 3, 4, 6].map(n => base('n' + n, { images: images(n) })) });
+const stressCounts = [2, 3, 4, 5, 6];
+const stress = build('stress', { deck: { title: '测试' }, slides: stressCounts.map(n => base('n' + n, { images: images(n) })) });
 assert.equal(stress.result.status, 0, stress.result.stderr);
 const invalid = [
   { images: [{ ...images(1)[0], content_position: 'top' }, ...images(1)] },
@@ -142,16 +143,29 @@ async function checkCurrent() {
         img: getComputedStyle(p.querySelector('img')).objectFit,
         title: p.querySelector('.multi-title') ? getComputedStyle(p.querySelector('.multi-title')).fontSize : null,
         copy: p.querySelector('.multi-copy') ? getComputedStyle(p.querySelector('.multi-copy')).fontSize : null })),
+      count: panels.length,
+      resolved: { scale: Number(grid.dataset.resolvedFontScale),
+        title: Number(grid.dataset.resolvedTitleSize), copy: Number(grid.dataset.resolvedCopySize) },
       positions: boxes.map(b => [b.x, b.y, b.width, b.height]) };
   });
   assert.equal(result.state, 'ready', JSON.stringify(result));
   assert.equal(result.alignment, true, JSON.stringify(result));
   assert.equal(result.overlaps, false); assert.equal(result.outside, false);
+  const titleSizes = [], copySizes = [];
   for (const style of result.styles) {
     assert.equal(style.img, 'contain');
-    if (style.title) assert.equal(style.title, '22px');
-    if (style.copy) assert.equal(style.copy, '20px');
+    if (style.title) titleSizes.push(parseFloat(style.title));
+    if (style.copy) copySizes.push(parseFloat(style.copy));
   }
+  assert.ok(titleSizes.every(size => Math.abs(size - result.resolved.title) < 0.02));
+  assert.ok(copySizes.every(size => Math.abs(size - result.resolved.copy) < 0.02));
+  assert.ok(new Set(titleSizes.map(size => size.toFixed(2))).size <= 1, 'title sizes differ within one page');
+  assert.ok(new Set(copySizes.map(size => size.toFixed(2))).size <= 1, 'copy sizes differ within one page');
+  const baseTitle = result.count <= 3 ? 22 : result.count === 4 ? 20 : 18;
+  const baseCopy = result.count <= 3 ? 20 : 18;
+  assert.ok(result.resolved.title <= baseTitle + 0.01 && result.resolved.copy <= baseCopy + 0.01);
+  assert.ok(Math.abs(result.resolved.title - baseTitle * result.resolved.scale) < 0.02);
+  assert.ok(Math.abs(result.resolved.copy - baseCopy * result.resolved.scale) < 0.02);
   if (result.metrics) {
     assert.ok(result.metrics.min >= result.metrics.baseline.min - 1);
     assert.ok(result.metrics.total >= result.metrics.baseline.total - 1);
@@ -197,12 +211,13 @@ try {
         return layoutMultiImages(__deck.getCurrentSlide());
       });
     }
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < stressCounts.length; i++) {
       const start = Date.now();
       await page.evaluate(idx => __deck.slide(idx), i);
       await page.evaluate(() => window.__multiImageReady);
       const result = await checkCurrent();
-      console.log('stress', width, [2, 3, 4, 6][i], 'images:', Date.now() - start, 'ms',
+      assert.equal(result.resolved.scale, 1, 'short stress fixture should use its count tier without extra shrinking');
+      console.log('stress', width, stressCounts[i], 'images:', Date.now() - start, 'ms',
         'area ratio', (result.metrics.total / result.metrics.baseline.total).toFixed(3));
     }
   }
@@ -247,7 +262,7 @@ try {
   assert.equal(await page.locator('.multi-images').getAttribute('data-multi-state'), 'error');
   assert.match(await page.locator('.multi-images').getAttribute('data-multi-error'), /图片加载失败/);
   await page.goto(crowded.url); await ready();
-  assert.equal(await page.locator('.multi-images').getAttribute('data-multi-state'), 'error');
-  assert.match(await page.locator('.multi-images').getAttribute('data-multi-error'), /空间不足/);
-  console.log('PASS: multi-image auto/manual, 4 view modes, 2/3/4/6 images, schema failures, file/HTTP, missing image');
+  const crowdedResult = await checkCurrent();
+  assert.ok(crowdedResult.resolved.copy < 18, 'crowded text did not shrink below 18px');
+  console.log('PASS: multi-image auto/manual, adaptive fonts, 4 view modes, 2/3/4/5/6 images, schema failures, file/HTTP, missing image');
 } finally { await browser.close(); }

@@ -32,6 +32,8 @@ let manifest;
 try { manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')); }
 catch (error) { fail(`Invalid build-manifest.json: ${error.message}`); }
 const expectedPages = Number(manifest.slides);
+const mainTotal = Number.isInteger(Number(manifest.main_total)) && Number(manifest.main_total) > 0
+  ? Number(manifest.main_total) : expectedPages;
 const slideWidth = Number(manifest.slide_width);
 const slideHeight = Number(manifest.slide_height);
 if (!Number.isInteger(expectedPages) || expectedPages < 1 ||
@@ -126,6 +128,14 @@ try {
     document.documentElement.style.setProperty('overflow', 'hidden', 'important');
     document.body.style.setProperty('overflow', 'hidden', 'important');
   });
+  // Reveal 4.6.1's print renderer hard-codes a bare sequential number and does
+  // not call the configured slideNumber function. Reapply the same fixed
+  // ending-based denominator after its .pdf-page nodes have been created.
+  await page.evaluate(total => {
+    [...document.querySelectorAll('.pdf-page .slide-number-pdf')].forEach((node, index) => {
+      node.textContent = `${index + 1}/${total}`;
+    });
+  }, mainTotal);
   await page.waitForTimeout(250);
 
   const readiness = await page.evaluate(() => ({
@@ -134,11 +144,16 @@ try {
     mermaidSvgs: document.querySelectorAll('.mermaid svg').length,
     multiStates: [...document.querySelectorAll('.multi-images')].map(node => node.dataset.multiState),
     notesVisible: [...document.querySelectorAll('aside.notes')].some(node => getComputedStyle(node).display !== 'none'),
+    pageNumbers: [...document.querySelectorAll('.pdf-page .slide-number-pdf')].map(node => node.textContent.trim()),
   }));
   if (readiness.pdfPages !== expectedPages) fail(`Print layout has ${readiness.pdfPages} pages; manifest expects ${expectedPages}.`);
   if (readiness.mermaidSvgs !== readiness.mermaids) fail(`Mermaid rendering incomplete (${readiness.mermaidSvgs}/${readiness.mermaids}).`);
   if (readiness.multiStates.some(state => state !== 'ready')) fail(`Multi-image rendering incomplete: ${readiness.multiStates.join(', ')}`);
   if (readiness.notesVisible) fail('Presenter Notes unexpectedly visible in print layout.');
+  const expectedNumbers = Array.from({ length: expectedPages }, (_, index) => `${index + 1}/${mainTotal}`);
+  if (JSON.stringify(readiness.pageNumbers) !== JSON.stringify(expectedNumbers)) {
+    fail(`PDF page numbers are inconsistent with main total ${mainTotal}.`);
+  }
   if (failedRequests.length) fail(`Resource loading failed: ${failedRequests.join(', ')}`);
   if (consoleErrors.length) fail(`Page rendering error: ${consoleErrors.join(' | ')}`);
 

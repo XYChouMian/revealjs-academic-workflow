@@ -117,7 +117,14 @@
       [p.dataset.contentPosition, p.querySelector('.multi-title')?.innerHTML, p.querySelector('.multi-copy')?.innerHTML].join(':'))].join('|');
     if (grid.dataset.multiSignature === signature) { grid.dataset.multiState = 'ready'; return; }
     const gap = parseFloat(getComputedStyle(grid).getPropertyValue('--multi-gap'));
-    const cache = new Map(), fits = new Map();
+    const baseTitle = panels.length <= 3 ? 22 : panels.length === 4 ? 20 : 18;
+    const baseCopy = panels.length <= 3 ? 20 : 18;
+    let cache = new Map(), fits = new Map();
+    function setFontScale(scale) {
+      grid.style.setProperty('--multi-title-size', (baseTitle * scale) + 'px');
+      grid.style.setProperty('--multi-copy-size', (baseCopy * scale) + 'px');
+      cache = new Map(); fits = new Map();
+    }
       const probe = document.createElement('div');
       probe.className = 'multi-panel multi-measure';
       probe.style.cssText = 'position:absolute;visibility:hidden;height:auto;left:0;top:0;';
@@ -195,20 +202,54 @@
       function place(el, rect) {
         if (el) Object.assign(el.style, { left: rect.x + 'px', top: rect.y + 'px', width: rect.w + 'px', height: rect.h + 'px' });
       }
-      let result;
-      try {
+      function attempt(scale) {
+        setFontScale(scale);
+        let result;
+        const placements = [];
         if (grid.dataset.mode === 'auto') {
           result = optimize(panels.map((_, i) => i), width, height, ratios, measure, gap);
+          if (!result.valid) return null;
           for (const box of result.boxes) {
             Object.assign(panels[box.i].style, { left: box.x + 'px', top: box.y + 'px', width: box.w + 'px', height: box.h + 'px' });
           }
-          grid.dataset.multiMetrics = JSON.stringify({ min: result.min, total: result.total, baseline: result.baseline });
-          if (!result.valid) throw new Error('多图页图文空间不足，请调整网格、减少说明或拆页');
         }
         for (let i = 0; i < panels.length; i++) {
-          const bounds = panels[i].getBoundingClientRect(), scale = window.__deck.getScale();
-          const fit = measure(i, bounds.width / scale, bounds.height / scale);
-          if (!fit) throw new Error('多图页图文空间不足，请调整网格、减少说明或拆页');
+          const bounds = panels[i].getBoundingClientRect(), revealScale = window.__deck.getScale();
+          const fit = measure(i, bounds.width / revealScale, bounds.height / revealScale);
+          if (!fit) return null;
+          placements.push(fit);
+        }
+        return { result, placements };
+      }
+      let solution = attempt(1), resolvedScale = 1;
+      if (!solution) {
+        let failedScale = 1, passingScale = null;
+        for (let i = 0, scale = 0.75; i < 32; i++, scale *= 0.75) {
+          const candidate = attempt(scale);
+          if (candidate) { solution = candidate; passingScale = scale; break; }
+          failedScale = scale;
+        }
+        if (!solution) {
+          probe.remove();
+          throw new Error('多图页无法形成有效图文几何，请检查网格尺寸与内容结构');
+        }
+        let lo = passingScale, hi = failedScale;
+        for (let i = 0; i < 8; i++) {
+          const mid = (lo + hi) / 2;
+          const candidate = attempt(mid);
+          if (candidate) { solution = candidate; lo = mid; }
+          else hi = mid;
+        }
+        resolvedScale = lo;
+        solution = attempt(resolvedScale);
+      }
+      try {
+        if (solution.result) {
+          const result = solution.result;
+          grid.dataset.multiMetrics = JSON.stringify({ min: result.min, total: result.total, baseline: result.baseline });
+        }
+        for (let i = 0; i < panels.length; i++) {
+          const fit = solution.placements[i];
           panels[i].dataset.resolvedPosition = fit.mode;
           panels[i].dataset.contentFraction = fit.fraction;
           place(panels[i].querySelector('.figure'), fit.image);
@@ -217,6 +258,10 @@
         }
       }
       finally { probe.remove(); }
+    const resolvedTitle = baseTitle * resolvedScale, resolvedCopy = baseCopy * resolvedScale;
+    grid.dataset.resolvedFontScale = resolvedScale.toFixed(6);
+    grid.dataset.resolvedTitleSize = resolvedTitle.toFixed(3);
+    grid.dataset.resolvedCopySize = resolvedCopy.toFixed(3);
     for (const panel of panels) {
       const figure = panel.querySelector('.figure');
       const text = [...panel.querySelectorAll('.multi-title,.multi-copy')];
